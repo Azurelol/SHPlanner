@@ -9,7 +9,6 @@
 using UnityEngine;
 using Stratus;
 using UnityEngine.Events;
-using Ludiq.Reflection;
 
 namespace Prototype 
 {
@@ -25,7 +24,6 @@ namespace Prototype
     [Tooltip("How should the event be dispatched")] public DispatchType Type = DispatchType.Event;
     [Tooltip("What type of tag the target is using")] public string Tag;
     [Tooltip("The target to inform of this collision")] public GameObject Target;    
-    [Tooltip("What method to invoke on the target")] public UnityMethod Method = new UnityMethod();
     //[HideInInspector] bool WithinColliderBounds;
 
     //------------------------------------------------------------------------/
@@ -61,7 +59,6 @@ namespace Prototype
         this.Target.Dispatch<CollidedEvent>(cO);
           break;
         case DispatchType.Invoke:
-          Method.Invoke(gameobj);
           break;
       }
 

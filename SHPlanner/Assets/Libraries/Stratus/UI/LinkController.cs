@@ -18,7 +18,7 @@ namespace Stratus
     /// <summary>
     /// The manager for all links that the overlying LinkInterface has access to.
     /// </summary>
-    public class LinkController : MonoBehaviour
+    public class LinkController : StratusBehaviour
     {
       public bool Active;
       public Link.LinkStyle Style;

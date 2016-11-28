@@ -8,8 +8,8 @@
 using UnityEngine;
 using Stratus;
 using UnityEngine.UI;
-using Ludiq.Reflection;
 using System;
+using UnityEngine.Events;
 
 namespace Stratus
 {
@@ -23,7 +23,7 @@ namespace Stratus
     public class PropertyLink : Link
     {
       enum PropertyType { Number, Boolean, Invalid }
-      public UnityVariable Property;
+      //public UnityEvent Property;
       public NavigationAxis Axis;
       public float Increment = 1.0f;
       public float Minimum = 0.0f;
@@ -50,33 +50,33 @@ namespace Stratus
 
       protected override void OnStart()
       {
-        ValidateType();
-        UpdateVisual();
+        //ValidateType();
+        //UpdateVisual();
       }
 
       protected override void OnNavigate(Navigation dir)
       {
-        Trace.Script("Navigating!", this);
+        //Trace.Script("Navigating!", this);
         if (Axis == NavigationAxis.Horizontal)
         {
           if (dir == UI.Navigation.Right)
           {
-            this.ApplyIncrement();
+            //this.ApplyIncrement();
           }
           else if (dir == UI.Navigation.Left)
           {
-            this.ApplyDecrement();
+            //this.ApplyDecrement();
           }
         }
         else if (Axis == NavigationAxis.Vertical)
         {
           if (dir == UI.Navigation.Up)
           {
-            this.ApplyIncrement();
+            //this.ApplyIncrement();
           }
           else if (dir == UI.Navigation.Down)
           {
-            this.ApplyDecrement();
+            //this.ApplyDecrement();
           }
         }
       }
@@ -90,7 +90,8 @@ namespace Stratus
       {
         this.Deactivate();
       }
-
+      
+      /*
       void ApplyIncrement()
       {
         if (Tracing) Trace.Script("Applying increment to '" + Property.name + "'", this);
@@ -146,6 +147,7 @@ namespace Stratus
           Type = PropertyType.Boolean;
         }
       }
+      */
 
 
     }

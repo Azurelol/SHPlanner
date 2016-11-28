@@ -48,7 +48,7 @@ namespace Stratus
     /// <summary>
     /// A dictionary of all components that have connected to events, and a list of their delegates.
     /// </summary>
-    Dictionary<MonoBehaviour, List<GameObject>> ConnectedComponents = new Dictionary<MonoBehaviour, List<GameObject>>();
+    Dictionary<Behaviour, List<GameObject>> ConnectedComponents = new Dictionary<Behaviour, List<GameObject>>();
     /// <summary>
     /// A list of all event types that are being watched for at the moment.
     /// </summary>
@@ -118,7 +118,7 @@ namespace Stratus
     /// Disconnects this component from all events it has subscribed to.
     /// </summary>
     /// <param name="component"></param>
-    public static void Disconnect(MonoBehaviour component)
+    public static void Disconnect(Behaviour component)
     {
       if (Quitting)
         return;
@@ -145,7 +145,7 @@ namespace Stratus
     /// </summary>
     /// <param name="gameObj"></param>
     /// <param name="component"></param>
-    public static void Disconnect(MonoBehaviour component, GameObject gameObj)
+    public static void Disconnect(Behaviour component, GameObject gameObj)
     {
       DisconnectProcedure(component, gameObj);
       // Remove the gameobject from the component's list in the system
@@ -158,7 +158,7 @@ namespace Stratus
     /// </summary>
     /// <param name="gameObj"></param>
     /// <param name="component"></param>
-    static void DisconnectProcedure(MonoBehaviour component, GameObject gameObj)
+    static void DisconnectProcedure(Behaviour component, GameObject gameObj)
     {
       // If the GameObject has been removed previously...
       if (!Events.Instance.Delegates.ContainsKey(gameObj))

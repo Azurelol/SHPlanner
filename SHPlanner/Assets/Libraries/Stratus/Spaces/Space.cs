@@ -115,6 +115,11 @@ namespace Stratus {
       //Instance.gameObject.Dispatch<T>(eventObj);
     }
 
+    //public static void Connect<T>(Action<T> func)
+    //{
+    //
+    //}
+
     /**************************************************************************/
     /*!
     @brief Loads the given scene into this space.
@@ -125,9 +130,13 @@ namespace Stratus {
     {
       // Remove the current key from the map
       SceneMap.Remove(this.Scene);
-
       LoadNormally(sceneName);
       return;
+    }
+
+    public void ReloadScene()
+    {
+      this.LoadScene(this.Scene.name);
     }
 
     void LoadNewAndCool(string sceneName)

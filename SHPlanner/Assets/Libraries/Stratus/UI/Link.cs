@@ -208,6 +208,11 @@ namespace Stratus
         this.OnStart();
       }
 
+      void OnMouseDown()
+      {
+        Trace.Script("Ow!", this);
+      }
+
       /// <summary>
       /// Looks for this link's neighbors amongst the parent's children.
       /// </summary>
@@ -329,7 +334,7 @@ namespace Stratus
 
         //link.Select();
         //if (Navigation.OnNavigateRight) Trace.Script("nav right = " + Navigation.OnNavigateRight, this);
-        Trace.Script("Navigating to " + link.name + ", dir =  " + dir, this);
+        //Trace.Script("Navigating to " + link.name + ", dir =  " + dir, this);
 
         var selectEvent = new SelectEvent();
         selectEvent.Link = link;
@@ -346,8 +351,6 @@ namespace Stratus
       //------------
       void OnNavigateEvent(NavigateEvent e)
       {
-        Trace.Script("Hey", this);
-
         // If the link is not active, navigate to other links
         if (!Active)
         {

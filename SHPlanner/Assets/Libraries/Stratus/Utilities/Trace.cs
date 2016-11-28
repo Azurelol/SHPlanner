@@ -40,7 +40,7 @@ namespace Stratus
     /// </summary>
     /// <param name="obj">The message object.</param>
     /// <param name="component">The component which invoked this method. </param>
-    static public void Script(object obj, MonoBehaviour component = null)
+    static public void Script(object obj, Behaviour component = null)
     {
       StackTrace stackTrace = new StackTrace();
       var methodName = stackTrace.GetFrame(1).GetMethod().Name;
@@ -93,7 +93,7 @@ namespace Stratus
     /// <param name="obj">The data to log.</param>
     /// <param name="component">The component which invoked the method.</param>
     /// <param name="throwException">Whether to throw an exception.</param>
-    public static void Error(object obj, MonoBehaviour component = null, bool throwException = false)
+    public static void Error(object obj, Behaviour component = null, bool throwException = false)
     {
       StackTrace stackTrace = new StackTrace();
       var methodName = stackTrace.GetFrame(1).GetMethod().Name;

@@ -29,12 +29,24 @@ public static class EventsExtensions
   /// </summary>
   /// <typeparam name="T"></typeparam>
   /// <param name="gameObj"></param>
-  public static void Disconnect(this MonoBehaviour component)
+  public static void Disconnect(this Behaviour component)
   {
     //T type = default(T);
     //var eventName = type.ToString();
     Stratus.Events.Disconnect(component);
   }
+
+  ///// <summary>
+  ///// Disconnects this component from all events.
+  ///// </summary>
+  ///// <typeparam name="T"></typeparam>
+  ///// <param name="gameObj"></param>
+  //public static void Disconnect(this Stratus.UIElement component)
+  //{
+  //  //T type = default(T);
+  //  //var eventName = type.ToString();
+  //  Stratus.Events.Disconnect(component);
+  //}
 
   /// <summary>
   /// Disconnects this component from events from the specified GameObject.

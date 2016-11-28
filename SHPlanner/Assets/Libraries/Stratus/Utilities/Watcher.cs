@@ -9,13 +9,12 @@
 using UnityEngine;
 using Stratus;
 using UnityEngine.Events;
-using Ludiq.Reflection;
 
 namespace Stratus 
 {  
   public class Watcher : StratusBehaviour 
   {
-    public UnityVariable Variable = new UnityVariable();
+    //public UnityVariable Variable = new UnityVariable();
     //public UnityEvent Event = new UnityEvent();
   
   }  

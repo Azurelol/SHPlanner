@@ -41,7 +41,8 @@ namespace Stratus
       if (this.gameObject.scene.name != Name)
       {
         var sceneName = Name;
-        SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
+        SceneManager.CreateScene(sceneName);
+        //SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
         Scene = SceneManager.GetSceneByName(sceneName);
         SceneManager.MoveGameObjectToScene(this.gameObject, Scene);
         //Trace.Script("Created the GameSession scene!");

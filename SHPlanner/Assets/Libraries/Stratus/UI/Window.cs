@@ -213,6 +213,12 @@ namespace Stratus
         }
       }
 
+      void OnDrawGizmos()
+      {
+        //Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 0.25f);
+        //Gizmos.DrawLine()
+      }
+
 
 
     }
