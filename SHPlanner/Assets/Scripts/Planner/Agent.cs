@@ -13,6 +13,8 @@ namespace Prototype
 {
   public class Agent : StratusBehaviour 
   {
+    
+
   
   }  
 }

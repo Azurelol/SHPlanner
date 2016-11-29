@@ -21,6 +21,19 @@ namespace Prototype
     public Text Plan;
     public Text Goal;
 
+    void Start()
+    {
+      
+      //
+      Watch();
+    }
+
+
+    void Watch()
+    {
+      this.Name.text = Planner.gameObject.name;
+      //this.Goal.text = Planner.CurrentGoal.ToString();
+    }
 
 
   }  

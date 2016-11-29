@@ -13,40 +13,60 @@ using System.Collections.Generic;
 namespace Prototype 
 {
   public class Planner : StratusBehaviour 
-  {
+  {    
+    public class MakePlanEvent : Stratus.Event { public Plan.Goal Goal; }
+
+
     /// <summary>
-    /// An action is a single, atomic step within a plan that makes a character do something.
+    /// The currently set goal for this planner.
     /// </summary>
-    public class Action
+    public Plan.Goal CurrentGoal;
+
+    /// <summary>
+    /// The current state of this agent.
+    /// </summary>
+    public Plan.State CurrentState;
+
+    void Start()
     {
+      this.gameObject.Connect<MakePlanEvent>(this.OnMakePlanEvent);
+      this.Formulate(CurrentGoal);
+    }
 
-      public abstract class Precondition
-      {
-        public abstract bool Check();
-      }
-
-      public abstract class Effect
-      {
-
-      }
-
-      public List<Precondition> Preconditions = new List<Precondition>();
-      public List<Effect> Effects = new List<Effect>();
-      public float Cost;
+    void OnMakePlanEvent(MakePlanEvent e)
+    {
+      Formulate(e.Goal);
     }
 
     /// <summary>
-    /// A sequence of actions.
+    /// Given a goal, formulates a plan.
     /// </summary>
-    public class Plan
+    /// <param name="goal"></param>
+    /// <returns></returns>
+    public Plan Formulate(Plan.Goal goal)
     {
-      /// <summary>
-      /// A sequence of actions, where each action represents a state transition.
-      /// </summary>
-      public List<Action> Actions = new List<Action>();
+      Trace.Script("Making plan to satisfy the goal: " + goal, this);
+
+      var plan = new Plan();
+
+      // Starting from the beginning, look for a plan that takes the planner's agent
+      // from their current state to their goal
+
+
+
+
+      return plan;
     }
 
-    public 
+
+    /// <summary>
+    /// Scans the world for objects we can interact with.
+    /// </summary>
+    /// <returns></returns>
+    bool ScanWorld()
+    {
+      return false;
+    }
 
 
   

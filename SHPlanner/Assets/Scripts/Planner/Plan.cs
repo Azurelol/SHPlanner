@@ -8,11 +8,22 @@
 /******************************************************************************/
 using UnityEngine;
 using Stratus;
+using System.Collections.Generic;
+using System;
 
 namespace Prototype 
 {
-  public class Plan : StratusBehaviour 
+  public partial class Plan 
   {
-  
-  }  
+    /// <summary>
+    /// A sequence of actions, where each action represents a state transition.
+    /// </summary>
+    public List<Action> Actions = new List<Action>();
+
+
+
+
+
+
+  }
 }
