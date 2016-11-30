@@ -12,25 +12,51 @@ using System.Collections.Generic;
 
 namespace Prototype 
 {
+  [RequireComponent(typeof(Agent))]
   public class Planner : StratusBehaviour 
   {    
-    public class MakePlanEvent : Stratus.Event { public Plan.Goal Goal; }
+    public class MakePlanEvent : Stratus.Event { public Goal Goal; }
 
 
     /// <summary>
     /// The currently set goal for this planner.
     /// </summary>
-    public Plan.Goal CurrentGoal;
+    public Goal CurrentGoal;
+
+    /// <summary>
+    /// The currently formulated plan
+    /// </summary>
+    public Plan CurrentPlan;
 
     /// <summary>
     /// The current state of this agent.
     /// </summary>
-    public Plan.State CurrentState;
+    public State CurrentState;
 
-    void Start()
+    /// <summary>
+    /// The range at which objects will be considered.
+    /// </summary>
+    public float ConsiderationRange = 50.0f;
+
+    /// <summary>
+    /// A list of all interactive objects we can interact with.
+    /// </summary>
+    public List<InteractiveObject> InteractivesInRange = new List<InteractiveObject>();
+
+    public List<Action> AvailableActions = new List<Action>();
+
+    void Awake()
     {
       this.gameObject.Connect<MakePlanEvent>(this.OnMakePlanEvent);
-      this.Formulate(CurrentGoal);
+      this.CurrentGoal = new TouchGoal();
+      //this.CurrentGoal.Target
+      
+      this.CurrentPlan =  this.Formulate(CurrentGoal);
+    }
+
+    void AddActions()
+    {
+      this.AvailableActions.Add(new MoveAction());
     }
 
     void OnMakePlanEvent(MakePlanEvent e)
@@ -43,29 +69,60 @@ namespace Prototype
     /// </summary>
     /// <param name="goal"></param>
     /// <returns></returns>
-    public Plan Formulate(Plan.Goal goal)
+    public Plan Formulate(Goal goal)
     {
-      Trace.Script("Making plan to satisfy the goal: " + goal, this);
+      this.Scan();
+      Trace.Script("Making plan to satisfy the goal: " + goal.Description, this);
 
       var plan = new Plan();
+      
 
-      // Starting from the beginning, look for a plan that takes the planner's agent
-      // from their current state to their goal
+      // Starting from the desired goal's state, look for a sequence
+      // of actions that will lead to that state
+      var currentState = CurrentState;
+      while (currentState != goal.State)
+      {
+        // Look for the actions that would fulfill this goal
+        foreach(var action in AvailableActions)
+        {
+          if (action.Effects.Contains(goal.State))
+          {
 
-
+          }
+        }
+      }
 
 
       return plan;
     }
 
+    void Update()
+    {
+      // Update the current goal
+      CurrentGoal.Update(Time.deltaTime);
+
+    }
 
     /// <summary>
     /// Scans the world for objects we can interact with.
     /// </summary>
     /// <returns></returns>
-    bool ScanWorld()
+    void Scan()
     {
-      return false;
+      InteractivesInRange.Clear();
+
+      var scan = Physics.OverlapSphere(transform.position, this.ConsiderationRange);
+      foreach(var hit in scan)
+      {
+        var interactive = hit.GetComponent<InteractiveObject>();
+        if (interactive != null)
+        {
+          Trace.Script("Found '" + interactive.name + "' within range!", this);
+          InteractivesInRange.Add(interactive);
+        }
+
+      }
+      
     }
 
 

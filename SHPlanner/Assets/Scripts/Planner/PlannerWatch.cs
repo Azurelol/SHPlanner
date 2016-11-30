@@ -28,11 +28,13 @@ namespace Prototype
       Watch();
     }
 
+ 
+
 
     void Watch()
     {
       this.Name.text = Planner.gameObject.name;
-      //this.Goal.text = Planner.CurrentGoal.ToString();
+      this.Goal.text = Planner.CurrentGoal.Name;
     }
 
 
