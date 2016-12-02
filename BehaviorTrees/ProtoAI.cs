@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class ProtoAI : MonoBehaviour
 {
     private BehaviorTree tree;
-    private KinematicController controller;
+    //private KinematicController controller;
     private AIBehaviors behaviors;
     private GameObject player;
     private List<AStarNode> nodeList;
@@ -13,7 +13,7 @@ public class ProtoAI : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        controller = GetComponent<KinematicController>();
+        //controller = GetComponent<KinematicController>();
         behaviors = GetComponent<AIBehaviors>();
         player = GameObject.Find("Player");
         behaviors = GetComponent<AIBehaviors>();
@@ -53,6 +53,6 @@ public class ProtoAI : MonoBehaviour
             move = behaviors.MovementTarget - transform.position;
             move = move.normalized;
         }
-        controller.Move(move);
+        //controller.Move(move);
     }
 }
