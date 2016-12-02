@@ -41,6 +41,14 @@ namespace Prototype
       this.OnStart();
     }
 
+    /// <summary>
+    /// Resets all values to this action, making it execute again from the beginning.
+    /// </summary>
+    public void Reset()
+    {
+
+    }
+
     bool Validate()
     {
       return this.OnValidate();
@@ -83,7 +91,7 @@ namespace Prototype
 
     protected override void OnEnd()
     {
-      Effects.Add(State.AtLocation);
+      //Effects.Add(State.AtLocation);
     }
 
     protected override bool OnValidate()

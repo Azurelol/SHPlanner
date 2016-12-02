@@ -1,14 +1,13 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using Stratus;
 
 namespace Prototype
 {
-  public enum State
+   
+  public abstract class State
   {
-    AttackingTarget,
-    AtLocation,
-    Idling
+    public string Name;
   }
 
   public class Data

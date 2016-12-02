@@ -15,6 +15,17 @@ namespace Prototype
   [RequireComponent(typeof(Agent))]
   public class Planner : StratusBehaviour 
   {    
+    public class FSM
+    {      
+      public interface State { void Update(FSM fsm); }
+      Stack<State> Stack = new Stack<State>();
+      public void Update(Agent agent)
+      {
+
+      }
+    }
+
+
     public class MakePlanEvent : Stratus.Event { public Goal Goal; }
 
 
