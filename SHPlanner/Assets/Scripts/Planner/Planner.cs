@@ -9,11 +9,12 @@
 using UnityEngine;
 using Stratus;
 using System.Collections.Generic;
+using System.Text;  
 
 namespace Prototype 
 {
   [RequireComponent(typeof(Agent))]
-  public class Planner : StratusBehaviour 
+  public partial class Planner : StratusBehaviour 
   {    
     public class FSM
     {      
@@ -25,10 +26,15 @@ namespace Prototype
       }
     }
 
+    //------------------------------------------------------------------------/
+    // Events
+    //------------------------------------------------------------------------/
+    public class AssessEvent : Stratus.Event {}
+    public class ActionSelectedEvent : Stratus.Event {}
 
-    public class MakePlanEvent : Stratus.Event { public Goal Goal; }
-
-
+    //------------------------------------------------------------------------/
+    // Properties
+    //------------------------------------------------------------------------/
     /// <summary>
     /// The currently set goal for this planner.
     /// </summary>
@@ -42,7 +48,7 @@ namespace Prototype
     /// <summary>
     /// The current state of this agent.
     /// </summary>
-    public State CurrentState;
+    public WorldState CurrentState;
 
     /// <summary>
     /// The range at which objects will be considered.
@@ -54,64 +60,71 @@ namespace Prototype
     /// </summary>
     public List<InteractiveObject> InteractivesInRange = new List<InteractiveObject>();
 
-    public List<Action> AvailableActions = new List<Action>();
+    /// <summary>
+    /// List of all available actions to this planner.
+    /// </summary>
+    public Action[] AvailableActions;
 
+    /// <summary>
+    /// Whether we are tracing for debugging purposes.
+    /// </summary>
+    public bool Tracing = false;
+    
+    //------------------------------------------------------------------------/
+    // Methods
+    //------------------------------------------------------------------------/
+    /// <summary>
+    /// Initializes the planner.
+    /// </summary>
     void Awake()
-    {
-      this.gameObject.Connect<MakePlanEvent>(this.OnMakePlanEvent);
-      this.CurrentGoal = new TouchGoal();
-      //this.CurrentGoal.Target
-      
-      this.CurrentPlan =  this.Formulate(CurrentGoal);
-    }
-
-    void AddActions()
-    {
-      this.AvailableActions.Add(new MoveAction());
-    }
-
-    void OnMakePlanEvent(MakePlanEvent e)
-    {
-      Formulate(e.Goal);
+    {      
+      this.Subscribe();
+      this.AddActions();
+      //this.CurrentPlan =  this.Formulate(CurrentGoal);
     }
 
     /// <summary>
-    /// Given a goal, formulates a plan.
+    /// Subscribes to events.
     /// </summary>
-    /// <param name="goal"></param>
-    /// <returns></returns>
-    public Plan Formulate(Goal goal)
+    void Subscribe()
     {
-      this.Scan();
-      Trace.Script("Making plan to satisfy the goal: " + goal.Description, this);
-
-      var plan = new Plan();
-      
-
-      // Starting from the desired goal's state, look for a sequence
-      // of actions that will lead to that state
-      var currentState = CurrentState;
-      while (currentState != goal.State)
-      {
-        // Look for the actions that would fulfill this goal
-        foreach(var action in AvailableActions)
-        {
-          if (action.Effects.Contains(goal.State))
-          {
-
-          }
-        }
-      }
-
-
-      return plan;
+      this.gameObject.Connect<AssessEvent>(this.OnAssessEvent);
+    }
+    
+    /// <summary>
+    /// Adds all the actions available to this planner
+    /// </summary>
+    void AddActions()
+    {
+      AvailableActions = GetComponentsInChildren<Action>();
     }
 
-    void Update()
+    /// <summary>
+    /// Invoked by the agent in order for this planner to formulate a plan.
+    /// </summary>
+    /// <param name="e"></param>
+    void OnAssessEvent(AssessEvent e)
     {
-      // Update the current goal
-      CurrentGoal.Update(Time.deltaTime);
+      this.MakePlan();
+    }
 
+    /// <summary>
+    /// Modifies the current world state of this planner.
+    /// </summary>
+    /// <param name="e"></param>
+    void OnModifyWorldStateEvent(Action.ModifyWorldStateEvent e)
+    {
+      this.CurrentState.Merge(e.Effects);
+    }
+    
+    /// <summary>
+    /// Makes a plan given the current goal and actions available to this planner.
+    /// </summary>
+    void MakePlan()
+    {
+      this.Scan();
+      this.CurrentPlan = Plan.Formulate(this, this.AvailableActions, this.CurrentState, this.CurrentGoal);
+      this.gameObject.Dispatch<ActionSelectedEvent>(new ActionSelectedEvent());
     }
 
     /// <summary>
@@ -128,14 +141,32 @@ namespace Prototype
         var interactive = hit.GetComponent<InteractiveObject>();
         if (interactive != null)
         {
-          Trace.Script("Found '" + interactive.name + "' within range!", this);
+          
           InteractivesInRange.Add(interactive);
         }
 
       }
       
+      if (Tracing)
+      {
+        Trace.Script(InteractivesInRange, this);
+      }
+
     }
 
+    /// <summary>
+    /// Prints all actions available to this planner.
+    /// </summary>
+    /// <returns></returns>
+    string PrintAvailableActions()
+    {
+      var builder = new StringBuilder();
+      foreach(var action in AvailableActions)
+      {
+        builder.AppendFormat(" - {0}", action.Name);                
+      }
+      return builder.ToString();
+    }
 
   
   }  

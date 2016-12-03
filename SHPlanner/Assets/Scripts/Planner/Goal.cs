@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System;
+using Stratus;
 
 namespace Prototype
 {
   [Serializable]
-  public abstract class Goal
+  public abstract class Goal : StratusBehaviour
   {
     public enum Status
     {
@@ -31,22 +32,28 @@ namespace Prototype
     }
 
     /// <summary>
-    /// The desired state for this goal.
+    /// The desired conditions to reach this goal.
     /// </summary>
-    public State State;
-    /// <summary>
-    /// The target of this goal.
-    /// </summary>
-    public Transform Target;
+    public WorldState DesiredState = new WorldState();
+        
+    public abstract void OnSetup();
     public abstract string Name { get; }
-    public abstract string Description { get; }
 
-    public Status Update(float dt)
+    void Start()
     {
-
-
-      return Status.Active;
+      this.OnSetup();
     }
+
+    public bool IsSatisfied()
+    {
+      return false;
+    }
+
+
+    //public Status Update(float dt)
+    //{
+    //  return Status.Active;
+    //}
 
   }
 

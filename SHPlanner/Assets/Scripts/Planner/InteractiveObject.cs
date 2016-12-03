@@ -1,24 +1,46 @@
-﻿using UnityEngine;
+/******************************************************************************/
+/*!
+@file   InteractiveObject.cs
+@author Christian Sagel
+@par    email: c.sagel\@digipen.edu
+@par    DigiPen login: c.sagel
+*/
+/******************************************************************************/
+using UnityEngine;
 using System.Collections;
 using Stratus;
 
-public abstract class InteractiveObject : StratusBehaviour
+namespace Prototype
 {
+  public abstract class InteractiveObject : StratusBehaviour
+  {    
+    public class InteractEvent : Stratus.Event {}
+    protected abstract void OnInteractiveObjectInitialized();
+    protected abstract void OnInteractiveObjectDestroyed();
+    protected abstract void OnSubscribe();
 
-	// Use this for initialization
-	void Start () {
-	
-	}
+    void Start()
+    {
+      this.OnInteractiveObjectInitialized();
+      this.Subscribe();
+    }
 
-  protected override void OnDestroyed()
-  {
-    
+    void Subscribe()
+    {
+      this.OnSubscribe();
+    }
+
+    protected override void OnDestroyed()
+    {
+      this.OnInteractiveObjectDestroyed();
+    }
+
+    public void Interact()
+    {
+
+    }
+
+
   }
-
-  public void Interact()
-  {
-
-  }
-
 
 }

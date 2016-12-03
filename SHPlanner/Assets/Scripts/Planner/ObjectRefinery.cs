@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*!
-@file   MoveToAction.cs
+@file   ObjectRefinery.cs
 @author Christian Sagel
 @par    email: c.sagel\@digipen.edu
 @par    DigiPen login: c.sagel
@@ -12,26 +12,32 @@ using System;
 
 namespace Prototype 
 {
-  public class MoveToAction : Action
+  public class ObjectRefinery : InteractiveObject
   {
-    protected override void OnStart()
+    public class DeliverResourceEvent {}
+
+    protected override void OnSubscribe()
+    {
+      
+    }
+    
+    void OnDeliverResourceEvent(DeliverResourceEvent e)
+    {
+      Trace.Script("Received resource!", this);
+    }
+
+    protected override void OnInteractiveObjectInitialized()
     {
       
     }
 
-    protected override void OnEnd()
+    protected override void OnInteractiveObjectDestroyed()
     {
       
     }
 
-    protected override void OnExecute()
-    {
-      
-    }
 
-    protected override bool OnValidate()
-    {
-      return false;
-    }
+
+
   }
 }
