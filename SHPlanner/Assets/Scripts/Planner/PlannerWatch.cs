@@ -20,6 +20,7 @@ namespace Prototype
     public Text Name;
     public Text Plan;
     public Text Goal;
+    public Text Action;
 
     void Start()
     {
@@ -31,14 +32,39 @@ namespace Prototype
     {
       if (!this.Planner)
         return;
-      //this.Planner.
+
+      this.Planner.gameObject.Connect<Planner.PlanFormulatedEvent>(this.OnPlanFormulatedEvent);
+      this.Planner.gameObject.Connect<Planner.PlanExecutedEvent>(this.OnPlanExecutedEvent);
+      this.Planner.gameObject.Connect<Planner.ActionSelectedEvent>(this.OnActionSelectedEvent);
+    }
+    
+    void OnActionSelectedEvent(Planner.ActionSelectedEvent e)
+    {
+      this.Action.text = e.Action.Description;
     }
 
+    /// <summary>
+    /// Received when the current plan has been successfully executed
+    /// </summary>
+    /// <param name="e"></param>
+    void OnPlanExecutedEvent(Planner.PlanExecutedEvent e)
+    {
+      this.Plan.text = "";
+      this.Action.text = "";
+    }
+
+    /// <summary>
+    /// Received when a valid plan has been formulated by the planner
+    /// </summary>
+    /// <param name="e"></param>
     void OnPlanFormulatedEvent(Planner.PlanFormulatedEvent e)
     {
-
+      this.Plan.text = e.Plan.Print();
     }
 
+    /// <summary>
+    /// Configures this watcher for a given planner
+    /// </summary>
     void Watch()
     {
       this.Name.text = Planner.gameObject.name;

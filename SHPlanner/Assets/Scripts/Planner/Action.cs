@@ -18,10 +18,11 @@ namespace Prototype
     //------------------------------------------------------------------------/
     // Events
     //------------------------------------------------------------------------/
-    public class StartEvent {}
-    public class EndEvent {}
-    public class ModifyWorldStateEvent : Stratus.Event { public WorldState Effects;
-      public ModifyWorldStateEvent(WorldState state) { Effects = state; } }
+    public abstract class ActionEvent : Stratus.Event { public Action Action; }
+    public class StartedEvent : ActionEvent { }
+    public class EndedEvent : ActionEvent { }
+    //public class ModifyWorldStateEvent : Stratus.Event { public WorldState Effects;
+    //  public ModifyWorldStateEvent(WorldState state) { Effects = state; } }
 
     //------------------------------------------------------------------------/
     // Properties
@@ -29,12 +30,17 @@ namespace Prototype
     bool Active = false;
     protected Agent Agent;
     protected Planner Planner;
-    public abstract string Name { get; }
     public WorldState Preconditions = new WorldState();
     public WorldState Effects = new WorldState();
     public bool IsInterruptible = false;
     public float Cost = 1f;
-    //public Transform Target;
+    [Tooltip("How long it takes to execute this action")]
+    public float Speed = 1f;
+    [Tooltip("The range at which this action needs to be within the target")]
+    public float Range = 2f;
+    public abstract string Description { get; }
+
+    Countdown ActionTimer = new Countdown();
 
     //------------------------------------------------------------------------/
     // Inheritance
@@ -45,6 +51,7 @@ namespace Prototype
     protected abstract void OnExecute();
     protected abstract bool OnValidate();
     protected abstract void OnReset();
+    protected virtual bool OnCheckContextPrecondition() { return true; }
 
     //------------------------------------------------------------------------/
     // Methods
@@ -60,27 +67,26 @@ namespace Prototype
     /// Updates this action.
     /// </summary>
     /// <returns></returns>
-    public bool Update()
+    void Update()
     {
       if (!this.Active)
-        return false;
+        return;
 
       // If the action has finished, end it
-      if (this.Validate())
-      {
-        this.End();
-        return true;
-      }
-
+      if (this.Validate())      
+        this.End();      
       // Otherwise keep executing it.
-      this.Execute();
-      return false;
+      else
+        this.Execute();
     }
 
-
+    /// <summary>
+    /// Checks whether this action has any context preconditionsto be fulfilled
+    /// </summary>
+    /// <returns></returns>
     public bool CheckContextPrecondition()
     {
-      return true;
+      return OnCheckContextPrecondition();
     }
 
     /// <summary>
@@ -88,8 +94,9 @@ namespace Prototype
     /// </summary>
     public void Begin()
     {
-      Trace.Script("", this.Agent);
+      this.Reset();      
       this.OnBegin();
+      this.Active = true;
     }
 
     /// <summary>
@@ -97,6 +104,7 @@ namespace Prototype
     /// </summary>
     public void Reset()
     {
+      this.ActionTimer.Reset(this.Speed);
       this.OnReset();
     }
 
@@ -114,18 +122,30 @@ namespace Prototype
     /// </summary>
     void Execute()
     {
-      this.OnExecute();
+      // Start casting the action
+      if (ActionTimer.Update(Time.deltaTime))
+      {
+        //Trace.Script(Description + " : Executing!", this);
+        this.OnExecute();
+      }
+
+      //Trace.Script(Description + " : Casting action...", this);
+
     }    
 
     /// <summary>
     /// Ends this action, applying its effect.
     /// </summary>
-    public void End()
+    void End()
     {
       this.OnEnd();
-      Trace.Script("Applying effects to the state", this.Agent);
-      this.gameObject.Dispatch<ModifyWorldStateEvent>(new ModifyWorldStateEvent(this.Effects));
+      //Trace.Script(Description + " : Applying effects to the state", this.Agent);
+      var e = new Action.EndedEvent();
+      e.Action = this;
+      this.gameObject.Dispatch<Action.EndedEvent>(e);
+      this.Active = false;
     }
+    
 
     void Approach()
     {
@@ -133,36 +153,6 @@ namespace Prototype
     }
 
 
-  }
-
-
-  //public class MoveAction : Action
-  //{
-  //  public float Range = 2.0f;
-  //
-  //  protected override void OnExecute()
-  //  {
-  //    this.Agent.transform.position = Vector3.MoveTowards(Agent.transform.position, Target.position, Time.deltaTime);
-  //  }
-  //
-  //  protected override void OnStart()
-  //  {
-  //   
-  //  }
-  //
-  //  protected override void OnEnd()
-  //  {
-  //    //Effects.Add(State.AtLocation);
-  //  }
-  //
-  //  protected override bool OnValidate()
-  //  {
-  //    // Check if we are within the right distance of the target
-  //    if (Vector3.Distance(Agent.transform.position, Target.transform.position) < this.Range)
-  //      return true;
-  //
-  //    return false;
-  //  }
-  //}
+  } 
 
 }

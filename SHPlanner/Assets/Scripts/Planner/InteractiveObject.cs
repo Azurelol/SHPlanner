@@ -15,6 +15,7 @@ namespace Prototype
   public abstract class InteractiveObject : StratusBehaviour
   {    
     public class InteractEvent : Stratus.Event {}
+    public string Description = "Resource";
     protected abstract void OnInteractiveObjectInitialized();
     protected abstract void OnInteractiveObjectDestroyed();
     protected abstract void OnSubscribe();

@@ -44,7 +44,7 @@ namespace Prototype
         /// <summary>
         /// g(x): How much it costs to get back to the starting node
         /// </summary>
-        public float GivenCost;
+        public float GivenCost = 0f;
         /// <summary>
         /// Everytime we do a search, we increment this. Behaves like a dirty bit.
         /// </summary>
@@ -61,17 +61,35 @@ namespace Prototype
         }
       }
 
+      
       //------------------------------------------------------------------------/
       // Methods
       //------------------------------------------------------------------------/
       /// <summary>
       /// A sequence of actions, where each action represents a state transition.
       /// </summary>
-      public Queue<Action> Actions = new Queue<Prototype.Action>();
+      public LinkedList<Action> Actions = new LinkedList<Prototype.Action>();
+      public bool IsFinished { get { return Actions.Count == 0; } }
 
+      /// <summary>
+      /// Gets the next action in the sequence.
+      /// </summary>
+      /// <returns></returns>
+      public Action Next()
+      {
+        
+        var action = Actions.First();
+        Actions.RemoveFirst();
+        return action;
+      }
+
+      /// <summary>
+      /// Adds an action to the plan
+      /// </summary>
+      /// <param name="action"></param>
       public void Add(Action action)
       {
-        Actions.Enqueue(action);
+        Actions.AddFirst(action);
       }
 
       /// <summary>
@@ -88,25 +106,32 @@ namespace Prototype
         // Get all valid actions whose context preconditions are true
         var usableActions = (from action in actions where action.CheckContextPrecondition() select action).ToArray();
 
-        if (planner.Tracing)
-        {
-          Trace.Script("Making plan to satisfy the goal '" + goal.Name + "' with preconditions:" + goal.DesiredState.Print(), planner);
-          Trace.Script("Actions available:" + planner.PrintAvailableActions(), planner);
-        }
+        //if (planner.Tracing)
+        //{
+        //  Trace.Script("Making plan to satisfy the goal '" + goal.Name + "' with preconditions:" + goal.DesiredState.Print(), planner);
+        //  Trace.Script("Actions available:" + planner.PrintAvailableActions(), planner);
+        //}
 
         // Build up a tree of nodes
         List<Node> path = new List<Node>();
         Node starting = new Node(null, 0f, goal.DesiredState, null);
         // Look for a solution, backtracking from the goal's desired world state until
         // we have fulfilled every precondition leading up to it!
-        var hasFoundPath = FindSolution(path, starting, actions);
-        Trace.Script("The path has " + path.Count + " nodes!", planner);
+        var hasFoundPath = FindSolution(path, starting, usableActions);
+        // If the path has not been found
+        if (!hasFoundPath)
+        {
+          return new Plan();
+        }
+        
+        //Trace.Script("The path has " + path.Count + " nodes!", planner);
                       
         // Make the plan
         var plan = new Plan();
         foreach (var node in path)
           plan.Add(node.Action);
-        Trace.Script("Formulated plan: \n" + plan.Print(), planner);
+
+        //Trace.Script("Formulated plan: \n" + plan.Print(), planner);
         return plan;
       }
 
@@ -122,18 +147,14 @@ namespace Prototype
         bool solutionFound = false;
         Node cheapestNode = null;
 
-        Trace.Script("Looking to fulfill the preconditions:" + parent.State.Print());
+        //Trace.Script("Looking to fulfill the preconditions:" + parent.State.Print());
 
         // Look for actions that fulfill the preconditions
         foreach(var action in actions)
         {
           if (action.Effects.Satisfies(parent.State))
           {
-            Trace.Script(action.Name + " satisfies the preconditions");
-
-            // Apply the actions effects to the parent state
-            //var currentState = parent.State.Copy();
-            //currentState.Merge(action.Effects);
+            //Trace.Script(action.Description + " satisfies the preconditions");
 
             // Create a new node
             var node = new Node(parent, parent.Cost + action.Cost, action.Preconditions, action);
@@ -144,20 +165,24 @@ namespace Prototype
           }
           else
           {
-            Trace.Script(action.Name + " does not satisfy the preconditions");
+            //Trace.Script(action.Description + " does not satisfy the preconditions");
           }
         }
 
         if (cheapestNode == null)
+        {
+          //Trace.Script("No actions could fulfill these preconditions");
           return false;
+        }
 
         // Add the cheapest node to the path
         path.Add(cheapestNode);
-        Trace.Script("Adding " + cheapestNode.Action.Name + " to the path");
+        //Trace.Script("Adding " + cheapestNode.Action.Description + " to the path");
 
         // If this action has no more preconditions left to fulfill
         if (cheapestNode.Action.Preconditions.IsEmpty)
         {
+          //Trace.Script("No preconditions left!");
           solutionFound = true;
         }
         // Else if it has a precondition left to fulfill, keep looking
@@ -165,7 +190,7 @@ namespace Prototype
         {
           var actionSubset = (from remainingAction in actions where !remainingAction.Equals(cheapestNode.Action) select remainingAction).ToArray();
           bool found = FindSolution(path, cheapestNode, actionSubset);
-          if (found) solutionFound = true;
+          if (found)solutionFound = true;
         }
 
         return solutionFound;
@@ -220,7 +245,7 @@ namespace Prototype
         var builder = new StringBuilder();
         foreach(var action in Actions)
         {         
-          builder.AppendLine("- " + action.Name);
+          builder.AppendLine("- " + action.Description);
         }
         return builder.ToString();
       }

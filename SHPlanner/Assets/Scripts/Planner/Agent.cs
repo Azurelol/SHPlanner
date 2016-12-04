@@ -11,7 +11,8 @@ using Stratus;
 
 namespace Prototype 
 {
-  public class Agent : StratusBehaviour 
+  [SelectionBase]
+  public class Agent : StratusBehaviour
   {
     //------------------------------------------------------------------------/
     // Events
@@ -27,7 +28,7 @@ namespace Prototype
     //------------------------------------------------------------------------/
     // Properties
     //------------------------------------------------------------------------/
-    [Range(0.0f, 1.0f)] public float AssessmentPeriod = 0.4f;
+    [Range(0.0f, 2.5f)] public float AssessmentPeriod = 0.4f;
     System.Action CurrentBehavior;
     Countdown AssesssmentTimer;
 
@@ -51,7 +52,8 @@ namespace Prototype
     void Subscribe()
     {
       this.gameObject.Connect<MoveToTargetEvent>(this.OnMoveToTargetEvent);
-      this.gameObject.Connect<Planner.ActionSelectedEvent>(this.OnActionSelectedEvent);
+      this.gameObject.Connect<Planner.PlanFormulatedEvent>(this.OnPlanFormulatedEvent);
+      this.gameObject.Connect<Planner.PlanExecutedEvent>(this.OnPlanExecutedEvent);
     }
 
     /// <summary>
@@ -61,7 +63,7 @@ namespace Prototype
     void Update()
     {
       if (AssesssmentTimer.Update(Time.deltaTime))
-      {        
+      {
         if (this.CurrentBehavior == Idle)
         {
           this.Assess();
@@ -70,10 +72,22 @@ namespace Prototype
       }
     }
 
-    void OnActionSelectedEvent(Planner.ActionSelectedEvent e)
-    {
-      Trace.Script("Action selected!", this);
+    /// <summary>
+    /// Received when a valid plan has been formulated by the planner
+    /// </summary>
+    /// <param name="e"></param>
+    void OnPlanFormulatedEvent(Planner.PlanFormulatedEvent e)
+    {      
       this.CurrentBehavior = Acting;
+    }
+
+    /// <summary>
+    /// Received when the current plan has been successfully exeecuted
+    /// </summary>
+    /// <param name="e"></param>
+    void OnPlanExecutedEvent(Planner.PlanExecutedEvent e)
+    {
+      this.CurrentBehavior = Idle;
     }
 
     void OnMoveToTargetEvent(MoveToTargetEvent e)
@@ -83,7 +97,7 @@ namespace Prototype
 
     void Assess()
     {
-      Trace.Script("Assessing the situation...", this);
+      //Trace.Script("Assessing the situation...", this);
       this.gameObject.Dispatch<Planner.AssessEvent>(new Planner.AssessEvent());
     }
 

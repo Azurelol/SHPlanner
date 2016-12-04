@@ -16,22 +16,25 @@ namespace Prototype
   [RequireComponent(typeof(Agent))]
   public partial class Planner : StratusBehaviour 
   {    
-    public class FSM
-    {      
-      public interface State { void Update(FSM fsm); }
-      Stack<State> Stack = new Stack<State>();
-      public void Update(Agent agent)
-      {
-
-      }
-    }
+    //public class FSM
+    //{      
+    //  public interface State { void Update(FSM fsm); }
+    //  Stack<State> Stack = new Stack<State>();
+    //  public void Update(Agent agent)
+    //  {
+    //
+    //  }
+    //}
 
     //------------------------------------------------------------------------/
     // Events
     //------------------------------------------------------------------------/
     public class AssessEvent : Stratus.Event {}
-    public class ActionSelectedEvent : Stratus.Event {}
-    public class PlanFormulatedEvent : Stratus.Event { Plan Plan; }
+    public class ActionSelectedEvent : Stratus.Event { public Action Action;
+      public ActionSelectedEvent(Action action) { Action = action; } }
+    public class PlanFormulatedEvent : Stratus.Event { public Plan Plan;
+      public PlanFormulatedEvent(Plan plan) { Plan = plan; } }
+    public class PlanExecutedEvent : Stratus.Event {}
 
     //------------------------------------------------------------------------/
     // Properties
@@ -45,6 +48,11 @@ namespace Prototype
     /// The currently formulated plan
     /// </summary>
     public Plan CurrentPlan;
+
+    /// <summary>
+    /// The currently running action
+    /// </summary>
+    public Action CurrentAction;
 
     /// <summary>
     /// The current state of this agent.
@@ -90,6 +98,7 @@ namespace Prototype
     void Subscribe()
     {
       this.gameObject.Connect<AssessEvent>(this.OnAssessEvent);
+      this.gameObject.Connect<Action.EndedEvent>(this.OnActionEndedEvent);
     }
     
     /// <summary>
@@ -110,12 +119,42 @@ namespace Prototype
     }
 
     /// <summary>
-    /// Modifies the current world state of this planner.
+    /// Received when a plan has been formulated.
     /// </summary>
     /// <param name="e"></param>
-    void OnModifyWorldStateEvent(Action.ModifyWorldStateEvent e)
+    void OnPlanFormulatedEvent(PlanFormulatedEvent e)
     {
-      this.CurrentState.Merge(e.Effects);
+      // Run the plan
+    }
+    
+    /// <summary>
+    /// Received when an action has finished
+    /// </summary>
+    /// <param name="e"></param>
+    void OnActionEndedEvent(Action.EndedEvent e)
+    {
+      // Modify the current world state due to the previous action
+      this.CurrentState.Merge(e.Action.Effects);
+      ExecutePlan();
+    }
+
+    /// <summary>
+    /// Executes the next action in the current plan
+    /// </summary>
+    void ExecutePlan()
+    {
+      // If there's nothing actions left in the plan, reassess?
+      if (CurrentPlan.IsFinished)
+      {
+        this.gameObject.Dispatch<PlanExecutedEvent>(new PlanExecutedEvent());
+        if (Tracing) Trace.Script("The plan for " + this.CurrentGoal.Name + " has been fulfilled!", this);
+        //this.gameObject.Dispatch<Agent.>
+        return;
+      }
+      
+      this.CurrentAction = CurrentPlan.Next();
+      this.CurrentAction.Begin();      
+      this.gameObject.Dispatch<ActionSelectedEvent>(new ActionSelectedEvent(this.CurrentAction));
     }
     
     /// <summary>
@@ -126,9 +165,16 @@ namespace Prototype
       this.Scan();
       this.CurrentPlan = Plan.Formulate(this, this.AvailableActions, this.CurrentState, this.CurrentGoal);
       if (this.CurrentPlan != null)
-        this.gameObject.Dispatch<PlanFormulatedEvent>(new PlanFormulatedEvent());
-
-      this.gameObject.Dispatch<ActionSelectedEvent>(new ActionSelectedEvent());
+      {
+        //Trace.Script("Executing plan!", this);
+        this.gameObject.Dispatch<PlanFormulatedEvent>(new PlanFormulatedEvent(this.CurrentPlan));
+        this.ExecutePlan();
+      }
+      else
+      {
+        //Trace.Script("The plan could not be formulated!", this);
+      }
+      
     }
 
     /// <summary>
@@ -144,7 +190,8 @@ namespace Prototype
       {
         var interactive = hit.GetComponent<InteractiveObject>();
         if (interactive != null)
-        {          
+        {
+          //Trace.Script("Found " + interactive.Description, this);
           InteractivesInRange.Add(interactive);
         }
 
@@ -166,7 +213,7 @@ namespace Prototype
       var builder = new StringBuilder();
       foreach(var action in AvailableActions)
       {
-        builder.AppendFormat(" - {0}", action.Name);                
+        builder.AppendFormat(" - {0}", action.Description);                
       }
       return builder.ToString();
     }
