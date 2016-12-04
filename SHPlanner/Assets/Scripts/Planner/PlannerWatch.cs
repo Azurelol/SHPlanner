@@ -23,13 +23,21 @@ namespace Prototype
 
     void Start()
     {
-      
-      //
+      this.Subscribe();
       Watch();
     }
 
- 
+    void Subscribe()
+    {
+      if (!this.Planner)
+        return;
+      //this.Planner.
+    }
 
+    void OnPlanFormulatedEvent(Planner.PlanFormulatedEvent e)
+    {
+
+    }
 
     void Watch()
     {

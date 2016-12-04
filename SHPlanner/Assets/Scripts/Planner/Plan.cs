@@ -10,7 +10,8 @@ using UnityEngine;
 using Stratus;
 using System.Collections.Generic;
 using System.Collections;
-using System;
+using System.Linq;
+using System.Text;
 
 namespace Prototype 
 {
@@ -18,10 +19,55 @@ namespace Prototype
   {
     public partial class Plan
     {
+      //------------------------------------------------------------------------/
+      // Definitions
+      //------------------------------------------------------------------------/
+      /// <summary>
+      /// Represents a node in the graph of actions.
+      /// </summary>
+      class Node
+      {
+        public enum ListStatus { OpenList, ClosedList }
+
+        /// <summary>
+        /// The parent of this node, whose preconditions this node fulfills
+        /// </summary>
+        public Node Parent;
+        /// <summary>
+        /// Whether this node is on the open or closed list
+        /// </summary>
+        public ListStatus Status;
+        /// <summary>
+        /// f(x) = g(x) + h(x): The current cost of the node
+        /// </summary>
+        public float Cost;
+        /// <summary>
+        /// g(x): How much it costs to get back to the starting node
+        /// </summary>
+        public float GivenCost;
+        /// <summary>
+        /// Everytime we do a search, we increment this. Behaves like a dirty bit.
+        /// </summary>
+        public int Iteration = 0;
+
+        public WorldState State;
+        public Action Action;
+        public Node(Node parent, float cost, WorldState state, Action action)
+        {
+          Parent = parent;
+          Cost = cost;
+          State = state;
+          Action = action;
+        }
+      }
+
+      //------------------------------------------------------------------------/
+      // Methods
+      //------------------------------------------------------------------------/
       /// <summary>
       /// A sequence of actions, where each action represents a state transition.
       /// </summary>
-      public Queue<Action> Actions = new Queue<Action>();
+      public Queue<Action> Actions = new Queue<Prototype.Action>();
 
       public void Add(Action action)
       {
@@ -39,49 +85,145 @@ namespace Prototype
         foreach (var action in actions)
           action.Reset();
 
+        // Get all valid actions whose context preconditions are true
+        var usableActions = (from action in actions where action.CheckContextPrecondition() select action).ToArray();
 
+        if (planner.Tracing)
+        {
+          Trace.Script("Making plan to satisfy the goal '" + goal.Name + "' with preconditions:" + goal.DesiredState.Print(), planner);
+          Trace.Script("Actions available:" + planner.PrintAvailableActions(), planner);
+        }
 
+        // Build up a tree of nodes
+        List<Node> path = new List<Node>();
+        Node starting = new Node(null, 0f, goal.DesiredState, null);
+        // Look for a solution, backtracking from the goal's desired world state until
+        // we have fulfilled every precondition leading up to it!
+        var hasFoundPath = FindSolution(path, starting, actions);
+        Trace.Script("The path has " + path.Count + " nodes!", planner);
+                      
+        // Make the plan
         var plan = new Plan();
-        //plan.Actions.Add(new Action)
-
-        // Starting from the desired goal's state, look for a sequence
-        // of actions that will lead to that state
-        var currentState = CurrentState;
-
-        if (Tracing)
-        {
-          Trace.Script("Making plan to satisfy the goal '" + goal.Name + "' with preconditions:" + goal.DesiredState.Print(), this);
-          Trace.Script("Actions available:" + PrintAvailableActions(), this);
-        }
-
-        foreach (var action in AvailableActions)
-        {
-          if (action.Effects.Satisfies(goal.DesiredState))
-          {
-            Trace.Script(action.Name + " with effects: " + action.Effects.Print() + " satisfies the preconditions", this);
-          }
-          else
-          {
-            Trace.Script(action.Name + " does not satisfy the preconditions!", this);
-          }
-        }
-        //while (currentState != goal.DesiredState)
-        //{
-        //  // Look for the actions that would fulfill this goal
-        //  foreach(var action in AvailableActions)
-        //  {
-        //    if (action.Effects.Properties.Contains(goal.DesiredState))
-        //    {
-        //
-        //    }
-        //  }
-        //}
-
-        Trace.Script("Formulated plan:" + plan.Actions, this);
+        foreach (var node in path)
+          plan.Add(node.Action);
+        Trace.Script("Formulated plan: \n" + plan.Print(), planner);
         return plan;
       }
 
+      /// <summary>
+      /// Looks for a solution, backtracking from the goal to the current world state
+      /// </summary>
+      /// <param name="parent"></param>
+      /// <param name="actions"></param>
+      /// <param name="goal"></param>
+      /// <returns></returns>
+      static bool FindSolution(List<Node> path, Node parent, Action[] actions)
+      {
+        bool solutionFound = false;
+        Node cheapestNode = null;
 
+        Trace.Script("Looking to fulfill the preconditions:" + parent.State.Print());
+
+        // Look for actions that fulfill the preconditions
+        foreach(var action in actions)
+        {
+          if (action.Effects.Satisfies(parent.State))
+          {
+            Trace.Script(action.Name + " satisfies the preconditions");
+
+            // Apply the actions effects to the parent state
+            //var currentState = parent.State.Copy();
+            //currentState.Merge(action.Effects);
+
+            // Create a new node
+            var node = new Node(parent, parent.Cost + action.Cost, action.Preconditions, action);
+
+            // Replace the previous best node
+            if (cheapestNode == null) cheapestNode = node;
+            else if (cheapestNode.Cost > node.Cost) cheapestNode = node;
+          }
+          else
+          {
+            Trace.Script(action.Name + " does not satisfy the preconditions");
+          }
+        }
+
+        if (cheapestNode == null)
+          return false;
+
+        // Add the cheapest node to the path
+        path.Add(cheapestNode);
+        Trace.Script("Adding " + cheapestNode.Action.Name + " to the path");
+
+        // If this action has no more preconditions left to fulfill
+        if (cheapestNode.Action.Preconditions.IsEmpty)
+        {
+          solutionFound = true;
+        }
+        // Else if it has a precondition left to fulfill, keep looking
+        else
+        {
+          var actionSubset = (from remainingAction in actions where !remainingAction.Equals(cheapestNode.Action) select remainingAction).ToArray();
+          bool found = FindSolution(path, cheapestNode, actionSubset);
+          if (found) solutionFound = true;
+        }
+
+        return solutionFound;
+      }
+
+      /// <summary>
+      /// Finds a solution to the goal using A*
+      /// </summary>
+      /// <param name="actions"></param>
+      /// <param name="goal"></param>
+      /// <returns></returns>
+      static Queue<Action> FindSolution(WorldState startingState, Action[] actions, WorldState goal)
+      {
+        var openList = new List<Node>();
+        var startingNode = new Node(null, 0f, goal, null);
+        var destNode = new Node(null, 0f, startingState, null);
+
+        // 1. Put the starting node on the open list
+        PutOnList(openList, startingNode, Node.ListStatus.OpenList);
+
+        while (!openList.Empty())
+        {
+
+        }
+
+        var path = new Queue<Action>();
+        return path;       
+      }
+
+
+
+      static float CalculateHeuristicCost(Node node, Node target)
+      {
+        return 1f;
+      }
+
+      static void PutOnList(List<Node> openList, Node node, Node.ListStatus list)
+      {
+        if (list == Node.ListStatus.OpenList)
+        {
+          openList.Add(node);
+          node.Status = Node.ListStatus.OpenList;
+        }
+        else
+        {
+          node.Status = Node.ListStatus.ClosedList;
+        }
+      }
+
+      public string Print()
+      {
+        var builder = new StringBuilder();
+        foreach(var action in Actions)
+        {         
+          builder.AppendLine("- " + action.Name);
+        }
+        return builder.ToString();
+      }
 
 
 

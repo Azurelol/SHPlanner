@@ -15,7 +15,13 @@ using System.Text;
 
 namespace Prototype
 {
-
+  /// <summary>
+  /// In order to search the space of actions, the planner needs to present
+  /// the state of the world in some way that lets it easily apply the preconditions
+  /// and effects of actions. One compact way to represent the state of the world
+  /// is with a list of world property symbols that contain an enumarated attribute key,
+  /// a value.
+  /// </summary>
   public class WorldState
   {
     public class Symbol
@@ -134,6 +140,7 @@ namespace Prototype
 
 
     Dictionary<string, Symbol> Symbols = new Dictionary<string, Symbol>();
+    public bool IsEmpty { get { return Symbols.Count == 0; } }
 
     /// <summary>
     /// Adds a symbol to this world state.
@@ -198,6 +205,13 @@ namespace Prototype
         }
       }
     }
+
+    public WorldState Copy()
+    {
+      var newState = new WorldState();
+      newState = this;
+      return newState;
+    } 
 
     /// <summary>
     /// Prints all the symbols along with their values

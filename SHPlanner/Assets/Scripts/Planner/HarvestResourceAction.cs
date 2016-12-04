@@ -18,7 +18,7 @@ namespace Prototype
     protected override void OnSetup()
     {
       Preconditions.Add(new WorldState.Symbol("HasTool", true));
-      Effects.Add(new WorldState.Symbol("HasCrystal", true));
+      Effects.Add(new WorldState.Symbol("HasResource", true));
     }
 
     protected override bool OnValidateTarget(InteractiveObject obj)

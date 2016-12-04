@@ -31,6 +31,7 @@ namespace Prototype
     //------------------------------------------------------------------------/
     public class AssessEvent : Stratus.Event {}
     public class ActionSelectedEvent : Stratus.Event {}
+    public class PlanFormulatedEvent : Stratus.Event { Plan Plan; }
 
     //------------------------------------------------------------------------/
     // Properties
@@ -48,7 +49,7 @@ namespace Prototype
     /// <summary>
     /// The current state of this agent.
     /// </summary>
-    public WorldState CurrentState;
+    public WorldState CurrentState = new WorldState();
 
     /// <summary>
     /// The range at which objects will be considered.
@@ -124,6 +125,9 @@ namespace Prototype
     {
       this.Scan();
       this.CurrentPlan = Plan.Formulate(this, this.AvailableActions, this.CurrentState, this.CurrentGoal);
+      if (this.CurrentPlan != null)
+        this.gameObject.Dispatch<PlanFormulatedEvent>(new PlanFormulatedEvent());
+
       this.gameObject.Dispatch<ActionSelectedEvent>(new ActionSelectedEvent());
     }
 
@@ -140,17 +144,16 @@ namespace Prototype
       {
         var interactive = hit.GetComponent<InteractiveObject>();
         if (interactive != null)
-        {
-          
+        {          
           InteractivesInRange.Add(interactive);
         }
 
       }
       
-      if (Tracing)
-      {
-        Trace.Script(InteractivesInRange, this);
-      }
+      //if (Tracing)
+      //{
+      //  Trace.Script(InteractivesInRange, this);
+      //}
 
     }
 

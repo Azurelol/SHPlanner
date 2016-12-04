@@ -72,6 +72,7 @@ namespace Prototype
 
     void OnActionSelectedEvent(Planner.ActionSelectedEvent e)
     {
+      Trace.Script("Action selected!", this);
       this.CurrentBehavior = Acting;
     }
 
