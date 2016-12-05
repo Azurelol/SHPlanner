@@ -6,11 +6,9 @@
 @par    DigiPen login: c.sagel
 */
 /******************************************************************************/
-using UnityEngine;
-using Stratus;
 using System;
 
-namespace Prototype 
+namespace Prototype
 {
   public class ProcessResourceAction : InteractAction
   {
@@ -18,8 +16,9 @@ namespace Prototype
 
     protected override void OnSetup()
     {
-      Preconditions.Add(new WorldState.Symbol("HasResource", true));
-      Effects.Add(new WorldState.Symbol("HasProcessedResource", true));
+      Preconditions.Apply(new WorldState.Symbol("HasResource", true));
+      Effects.Apply(new WorldState.Symbol("HasResource", false));
+      Effects.Apply(new WorldState.Symbol("HasProcessedResource", true));
     }
 
     protected override bool OnValidateTarget(InteractiveObject obj)
@@ -31,9 +30,12 @@ namespace Prototype
 
     protected override void OnInteract()
     {
-      
+      //this.Target.gameObject.Dispatch<ObjectResource.DropOffEvent>(new ObjectResource.DropOffEvent());
     }
 
-
+    protected override void OnInteractActionReset()
+    {
+      //Effects.Apply("HasProcessedResource", false);
+    }
   }
 }

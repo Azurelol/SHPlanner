@@ -6,11 +6,9 @@
 @par    DigiPen login: c.sagel
 */
 /******************************************************************************/
-using UnityEngine;
-using Stratus;
 using System;
 
-namespace Prototype 
+namespace Prototype
 {
   public class PickUpToolAction : InteractAction
   {
@@ -18,7 +16,7 @@ namespace Prototype
 
     protected override void OnSetup()
     {
-      Effects.Add(new WorldState.Symbol("HasTool", true));
+      Effects.Apply(new WorldState.Symbol("HasTool", true));
     }
 
     protected override bool OnValidateTarget(InteractiveObject obj)
@@ -32,5 +30,11 @@ namespace Prototype
     {
       
     }
+
+    protected override void OnInteractActionReset()
+    {
+      //Effects.Apply(new WorldState.Symbol("HasTool", false));
+    }
   }
+
 }

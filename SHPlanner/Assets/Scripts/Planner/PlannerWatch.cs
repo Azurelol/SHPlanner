@@ -21,6 +21,7 @@ namespace Prototype
     public Text Plan;
     public Text Goal;
     public Text Action;
+    public ProgressBar.ProgressBarBehaviour ActionProgress;
 
     void Start()
     {
@@ -38,11 +39,18 @@ namespace Prototype
       this.Planner.gameObject.Connect<Planner.ActionSelectedEvent>(this.OnActionSelectedEvent);
     }
     
-    void OnActionSelectedEvent(Planner.ActionSelectedEvent e)
+    void Update()
     {
-      this.Action.text = e.Action.Description;
+      if (Planner.CurrentAction != null && ActionProgress != null)
+        ActionProgress.Value = Planner.CurrentAction.Progress * 100f;
     }
 
+    void OnActionSelectedEvent(Planner.ActionSelectedEvent e)
+    {
+      if (this.ActionProgress) this.ActionProgress.SetFillerSize(0f);
+      this.Action.text = e.Action.Description;
+    }
+    
     /// <summary>
     /// Received when the current plan has been successfully executed
     /// </summary>

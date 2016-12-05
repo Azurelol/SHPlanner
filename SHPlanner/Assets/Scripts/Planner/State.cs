@@ -24,6 +24,9 @@ namespace Prototype
   /// </summary>
   public class WorldState
   {
+    /// <summary>
+    /// Represents a property in the world (that is relevant to the planner)
+    /// </summary>
     public class Symbol
     {
       public enum Types { Integer, Float, Boolean, Vector3 }
@@ -38,7 +41,7 @@ namespace Prototype
       public string Name;
       public Union Value = new Union();
       public Transform Subject;
-      Types Type;
+      public Types Type;
 
       public Symbol(string name, bool value)
       {
@@ -51,7 +54,7 @@ namespace Prototype
       {
         Name = name;
         Value.Integer = value;
-        Type = Types.Float;
+        Type = Types.Integer;
       }
 
       public Symbol(string name, float value)
@@ -66,6 +69,13 @@ namespace Prototype
         Name = name;
         Value.Vector3 = value;
         Type = Types.Vector3;
+      }
+
+      public Symbol(string name, Types type, Union value)
+      {
+        Name = name;
+        Type = type;
+        Value = value;
       }
 
       public T GetValue<T>()
@@ -143,14 +153,45 @@ namespace Prototype
     public bool IsEmpty { get { return Symbols.Count == 0; } }
 
     /// <summary>
-    /// Adds a symbol to this world state.
+    /// Returns the symbol with the given name.
     /// </summary>
-    /// <param name="symbol"></param>
-    public void Add(Symbol symbol)
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public Symbol At(string name)
     {
-      Symbols.Add(symbol.Name, symbol);
+      if (Symbols.ContainsKey(name))
+        return Symbols[name];
+      return null;
     }
 
+    /// <summary>
+    /// Applies a symbol to this world state.
+    /// </summary>
+    /// <param name="symbol"></param>
+    public void Apply(Symbol symbol)
+    {
+      if (Symbols.ContainsKey(symbol.Name))
+        Symbols[symbol.Name].Value = symbol.Value;
+      else
+      {
+        Symbols.Add(symbol.Name, new Symbol(symbol.Name, symbol.Type, symbol.Value));
+      }
+        //Symbols.Add(symbol.Name, symbol);
+    }
+
+    /// <summary>
+    /// Applies a change to the given symbol in this world state. 
+    /// If not present, it will add it.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="value"></param>
+    public void Apply(string name, bool value)
+    {
+      if (Symbols.ContainsKey(name))
+        Symbols[name].Value.Boolean = value;
+      else
+        Symbols.Add(name, new Symbol(name, value));
+    }
     
     /// <summary>
     /// Checks if this world state fulfills of the other.
@@ -168,7 +209,7 @@ namespace Prototype
           // If the symbols were not equal...
           if (!Symbols[symbol.Key].Compare(symbol.Value))
           {
-            Trace.Script(Symbols[symbol.Key].Print() + " is not equal to " + symbol.Value.Print());
+            //Trace.Script(Symbols[symbol.Key].Print() + " is not equal to " + symbol.Value.Print());
             return false;
           }
         }
@@ -191,18 +232,20 @@ namespace Prototype
     /// <param name="other"></param>
     public void Merge(WorldState other)
     {
-      foreach (var symbol in other.Symbols)
+      foreach (var otherSymbol in other.Symbols)
       {
+        Apply(otherSymbol.Value);
+
         // Overwrite matching symbols
-        if (Symbols.ContainsKey(symbol.Key))
-        {
-          Symbols[symbol.Key] = symbol.Value;
-        }
-        // Add any ones not present
-        else
-        {
-          Add(symbol.Value);
-        }
+        //if (Symbols.ContainsKey(otherSymbol.Key))
+        //{
+        //  Symbols[otherSymbol.Key].Value = otherSymbol.Value.Value;
+        //}
+        //// Add any ones not present
+        //else
+        //{
+        //  Apply(otherSymbol.Value);
+        //}
       }
     }
 

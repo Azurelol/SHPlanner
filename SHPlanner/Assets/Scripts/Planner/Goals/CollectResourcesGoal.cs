@@ -15,9 +15,15 @@ namespace Prototype
   public class CollectResourcesGoal : Goal
   {
     public override string Name { get { return "Collect Resources"; } }
+
+    public override void OnFinished(Planner planner)
+    {
+      planner.CurrentState.Apply("HasDeliveredResource", false);
+    }
+
     public override void OnSetup()
     {
-      DesiredState.Add(new WorldState.Symbol("HasDeliveredResource", true));
+      DesiredState.Apply(new WorldState.Symbol("HasDeliveredResource", true));
     }
   }
 }

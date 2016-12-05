@@ -6,11 +6,9 @@
 @par    DigiPen login: c.sagel
 */
 /******************************************************************************/
-using UnityEngine;
-using Stratus;
 using System;
 
-namespace Prototype 
+namespace Prototype
 {
   public class HarvestResourceAction : InteractAction
   {
@@ -18,8 +16,9 @@ namespace Prototype
     
     protected override void OnSetup()
     {
-      Preconditions.Add(new WorldState.Symbol("HasTool", true));
-      Effects.Add(new WorldState.Symbol("HasResource", true));
+      Preconditions.Apply(new WorldState.Symbol("EquippedTool", true));
+      Effects.Apply(new WorldState.Symbol("EquippedTool", false));
+      Effects.Apply(new WorldState.Symbol("HasResource", true));
     }
 
     protected override bool OnValidateTarget(InteractiveObject obj)
@@ -31,7 +30,12 @@ namespace Prototype
 
     protected override void OnInteract()
     {
-      this.Target.gameObject.Dispatch<ObjectResource.PickUpEvent>(new ObjectResource.PickUpEvent());
+      this.Target.gameObject.Dispatch<ObjectResource.HarvestEvent>(new ObjectResource.HarvestEvent());
+    }
+
+    protected override void OnInteractActionReset()
+    {
+      //Effects.Apply(new WorldState.Symbol("HasResource", false));
     }
   }
 }

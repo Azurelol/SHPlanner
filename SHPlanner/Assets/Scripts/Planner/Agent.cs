@@ -28,7 +28,10 @@ namespace Prototype
     //------------------------------------------------------------------------/
     // Properties
     //------------------------------------------------------------------------/
+    [Tooltip("How long to wait to consider an action")]
     [Range(0.0f, 2.5f)] public float AssessmentPeriod = 0.4f;
+    [Tooltip("How fast this agent moves")]
+    public float MovementSpeed = 5f;
     System.Action CurrentBehavior;
     Countdown AssesssmentTimer;
 

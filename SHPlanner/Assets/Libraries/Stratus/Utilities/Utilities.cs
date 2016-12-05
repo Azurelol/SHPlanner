@@ -92,6 +92,7 @@ namespace Stratus
     float Current_;        
     public float Total { get { return Total_; } }
     public float Current { get { return Current_; } }
+
     /// <summary>
     /// The current progress in the bar as a percentage (0% - 100%)
     /// </summary>

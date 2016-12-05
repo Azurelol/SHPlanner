@@ -25,13 +25,13 @@ namespace Prototype
     
     void OnPickUpResourceEvent(ObjectResource.PickUpEvent e)
     {
-      Trace.Script("Picked up resource!", this);
+      //Trace.Script("Picked up resource!", this);
       Resources--;
     }
 
     void OnDropOffResourceEvent(ObjectResource.DropOffEvent e)
     {
-      Trace.Script("Received resource!", this);
+      //Trace.Script("Received resource!", this);
       Resources++;
     }
 

@@ -94,48 +94,48 @@ public class CrafterControllerFREE : MonoBehaviour {
     return inputVec.magnitude;
   }
 
-  void OnGUI () 
-  {
-    if (charState == CharacterState.Idle && !isMoving)
-    {
-      isPaused = false;
-
-      if (GUI.Button (new Rect (25, 25, 150, 30), "Pickup Box")) 
-      {
-        animator.SetTrigger("CarryPickupTrigger");
-        StartCoroutine (COMovePause(1.2f));
-        StartCoroutine (COShowItem("box", .5f));
-        charState = CharacterState.Box;
-      }
-
-      if (GUI.Button (new Rect (25, 65, 150, 30), "Recieve Box")) 
-      {
-        animator.SetTrigger("CarryRecieveTrigger");
-        StartCoroutine (COMovePause(1.2f));
-        StartCoroutine (COShowItem("box", .5f));
-        charState = CharacterState.Box;
-      }
-    }
-
-    if (charState == CharacterState.Box && !isMoving)
-    {
-      if (GUI.Button (new Rect (25, 25, 150, 30), "Put Down Box")) 
-      {
-        animator.SetTrigger("CarryPutdownTrigger");
-        StartCoroutine (COMovePause(1.2f));
-        StartCoroutine (COShowItem("none", .7f));
-        charState = CharacterState.Idle;
-      }
-      
-      if (GUI.Button (new Rect (25, 65, 150, 30), "Give Box")) 
-      {
-        animator.SetTrigger("CarryHandoffTrigger");
-        StartCoroutine (COMovePause(1.2f));
-        StartCoroutine (COShowItem("none", .6f));
-        charState = CharacterState.Idle;
-      }
-    }
-  }
+  //void OnGUI () 
+  //{
+  //  if (charState == CharacterState.Idle && !isMoving)
+  //  {
+  //    isPaused = false;
+  //
+  //    if (GUI.Button (new Rect (25, 25, 150, 30), "Pickup Box")) 
+  //    {
+  //      animator.SetTrigger("CarryPickupTrigger");
+  //      StartCoroutine (COMovePause(1.2f));
+  //      StartCoroutine (COShowItem("box", .5f));
+  //      charState = CharacterState.Box;
+  //    }
+  //
+  //    if (GUI.Button (new Rect (25, 65, 150, 30), "Recieve Box")) 
+  //    {
+  //      animator.SetTrigger("CarryRecieveTrigger");
+  //      StartCoroutine (COMovePause(1.2f));
+  //      StartCoroutine (COShowItem("box", .5f));
+  //      charState = CharacterState.Box;
+  //    }
+  //  }
+  //
+  //  if (charState == CharacterState.Box && !isMoving)
+  //  {
+  //    if (GUI.Button (new Rect (25, 25, 150, 30), "Put Down Box")) 
+  //    {
+  //      animator.SetTrigger("CarryPutdownTrigger");
+  //      StartCoroutine (COMovePause(1.2f));
+  //      StartCoroutine (COShowItem("none", .7f));
+  //      charState = CharacterState.Idle;
+  //    }
+  //    
+  //    if (GUI.Button (new Rect (25, 65, 150, 30), "Give Box")) 
+  //    {
+  //      animator.SetTrigger("CarryHandoffTrigger");
+  //      StartCoroutine (COMovePause(1.2f));
+  //      StartCoroutine (COShowItem("none", .6f));
+  //      charState = CharacterState.Idle;
+  //    }
+  //  }
+  //}
 
   public IEnumerator COMovePause(float pauseTime)
   {

@@ -19,6 +19,16 @@ namespace Prototype
     public class DropOffEvent : ObjectResourceEvent { }
     public class HarvestEvent : ObjectResourceEvent { }    
     public int Count = 1;
+    int InitialCount;
+
+    protected override void OnInteractiveObjectInitialized()
+    {
+      this.InitialCount = Count;
+    }
+
+    protected override void OnInteractiveObjectDestroyed()
+    {
+    }
 
     protected override void OnSubscribe()
     {
@@ -28,18 +38,14 @@ namespace Prototype
     void OnHarvestEvent(HarvestEvent e)
     {
       this.Count--;
+      // Scale it down depending on its count
+      var scaling = (float)Count / (float)InitialCount;
+      this.transform.localScale = this.transform.localScale * scaling;
+
       if (this.Count <= 0) Destroy(this.gameObject);
     }
 
-    protected override void OnInteractiveObjectInitialized()
-    {
 
-    }
-
-    protected override void OnInteractiveObjectDestroyed()
-    {
-      
-    }
 
 
 

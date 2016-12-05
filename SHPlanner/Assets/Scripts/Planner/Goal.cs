@@ -49,6 +49,13 @@ namespace Prototype
       return false;
     }
 
+    public void Finish(Planner planner)
+    {
+      this.OnFinished(planner);
+    }
+
+    public abstract void OnFinished(Planner planner);
+
 
     //public Status Update(float dt)
     //{

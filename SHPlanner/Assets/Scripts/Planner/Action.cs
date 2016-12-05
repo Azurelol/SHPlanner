@@ -21,6 +21,7 @@ namespace Prototype
     public abstract class ActionEvent : Stratus.Event { public Action Action; }
     public class StartedEvent : ActionEvent { }
     public class EndedEvent : ActionEvent { }
+    public class CanceledEvent : ActionEvent { }
     //public class ModifyWorldStateEvent : Stratus.Event { public WorldState Effects;
     //  public ModifyWorldStateEvent(WorldState state) { Effects = state; } }
 
@@ -36,11 +37,11 @@ namespace Prototype
     public float Cost = 1f;
     [Tooltip("How long it takes to execute this action")]
     public float Speed = 1f;
+    protected Countdown ProgressTimer = new Countdown();
     [Tooltip("The range at which this action needs to be within the target")]
     public float Range = 2f;
+    public float Progress { get { return ProgressTimer.Progress; } }
     public abstract string Description { get; }
-
-    Countdown ActionTimer = new Countdown();
 
     //------------------------------------------------------------------------/
     // Inheritance
@@ -93,8 +94,7 @@ namespace Prototype
     /// Starts this action.
     /// </summary>
     public void Begin()
-    {
-      this.Reset();      
+    {            
       this.OnBegin();
       this.Active = true;
     }
@@ -104,7 +104,8 @@ namespace Prototype
     /// </summary>
     public void Reset()
     {
-      this.ActionTimer.Reset(this.Speed);
+      this.Active = false;
+      this.ProgressTimer.Reset(this.Speed);
       this.OnReset();
     }
 
@@ -120,15 +121,15 @@ namespace Prototype
     /// <summary>
     /// Executes this action.
     /// </summary>
-    void Execute()
+    protected virtual void Execute()
     {
       // Start casting the action
-      if (ActionTimer.Update(Time.deltaTime))
+      if (ProgressTimer.Update(Time.deltaTime))
       {
         //Trace.Script(Description + " : Executing!", this);
         this.OnExecute();
       }
-
+      
       //Trace.Script(Description + " : Casting action...", this);
 
     }    
@@ -143,7 +144,8 @@ namespace Prototype
       var e = new Action.EndedEvent();
       e.Action = this;
       this.gameObject.Dispatch<Action.EndedEvent>(e);
-      this.Active = false;
+
+      this.Reset();
     }
     
 

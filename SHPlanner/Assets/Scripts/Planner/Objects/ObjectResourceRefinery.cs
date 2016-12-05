@@ -13,6 +13,8 @@ namespace Prototype
 {
   public class ObjectResourceRefinery : InteractiveObject
   {
+    public int Money = 0;
+
     protected override void OnSubscribe()
     {
       this.gameObject.Connect<ObjectResource.DropOffEvent>(this.OnDropOffResourceEvent);

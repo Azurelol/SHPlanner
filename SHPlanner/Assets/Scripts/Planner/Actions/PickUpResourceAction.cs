@@ -6,11 +6,10 @@
 @par    DigiPen login: c.sagel
 */
 /******************************************************************************/
-using UnityEngine;
-using Stratus;
 using System;
+using Stratus;
 
-namespace Prototype 
+namespace Prototype
 {
   public class PickUpResourceAction : InteractAction
   {
@@ -18,15 +17,16 @@ namespace Prototype
 
     protected override void OnSetup()
     {
-      Effects.Add(new WorldState.Symbol("HasResource", true));
+      Effects.Apply("HasResource", true);
     }
 
     protected override bool OnValidateTarget(InteractiveObject obj)
     {
-      var refinery = obj as ObjectResourceDepot;
-      if (refinery == null) return false;
+      var depot = obj as ObjectResourceDepot;
+      if (depot == null) return false;
+
       // If there's resources in the refinery, it is valid
-      if (refinery.Resources > 0) return true;
+      if (depot.Resources > 0) return true;
       Trace.Script("No resources available to pick up!", this);
       return false;
     }
@@ -36,5 +36,9 @@ namespace Prototype
       this.Target.gameObject.Dispatch<ObjectResource.PickUpEvent>(new ObjectResource.PickUpEvent());
     }
 
+    protected override void OnInteractActionReset()
+    {
+      //Effects.Apply("HasResource", false);
+    }
   }
 }

@@ -25,8 +25,9 @@ namespace Prototype
 
     protected override void OnSetup()
     {
-      Preconditions.Add(new WorldState.Symbol("HasResource", true));
-      Effects.Add(new WorldState.Symbol("HasDeliveredResource", true));
+      Preconditions.Apply("HasResource", true);
+      Effects.Apply("HasResource", false);
+      Effects.Apply("HasDeliveredResource", true);
     }
 
     protected override void OnInteract()
@@ -34,5 +35,11 @@ namespace Prototype
       var delivery = new ObjectResource.DropOffEvent();
       this.Target.gameObject.Dispatch<ObjectResource.DropOffEvent>(delivery);
     }
+
+    protected override void OnInteractActionReset()
+    {
+      //Effects.Apply(new WorldState.Symbol("HasDeliveredResource", false));
+    }
+
   }
 }

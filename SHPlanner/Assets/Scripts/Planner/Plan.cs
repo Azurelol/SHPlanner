@@ -59,6 +59,8 @@ namespace Prototype
           State = state;
           Action = action;
         }
+
+
       }
 
       
@@ -104,23 +106,39 @@ namespace Prototype
           action.Reset();
 
         // Get all valid actions whose context preconditions are true
-        var usableActions = (from action in actions where action.CheckContextPrecondition() select action).ToArray();
+        var usableActions = (from action 
+                             in actions
+                             where action.CheckContextPrecondition() && !currentState.Satisfies(action.Effects)
+                             select action).ToArray();
 
-        //if (planner.Tracing)
+        // Remove any actions whose effects the current world state already fulfills
+        //foreach(var action in usableActions)
         //{
-        //  Trace.Script("Making plan to satisfy the goal '" + goal.Name + "' with preconditions:" + goal.DesiredState.Print(), planner);
-        //  Trace.Script("Actions available:" + planner.PrintAvailableActions(), planner);
+        //  if (currentState.Satisfies(action.Effects))
+        //
         //}
+
+        //var remainingActions = (from action in usableActions
+        //                        where currentState.Satisfies()
+
+        if (planner.Tracing)
+        {
+          Trace.Script("Making plan to satisfy the goal '" + goal.Name + "' with preconditions:" + goal.DesiredState.Print(), planner);
+          Trace.Script("Actions available:", planner);
+          foreach (var action in usableActions)
+            Trace.Script("- " + action.Description, planner);
+        }
 
         // Build up a tree of nodes
         List<Node> path = new List<Node>();
         Node starting = new Node(null, 0f, goal.DesiredState, null);
         // Look for a solution, backtracking from the goal's desired world state until
         // we have fulfilled every precondition leading up to it!
-        var hasFoundPath = FindSolution(path, starting, usableActions);
+        var hasFoundPath = FindSolution(path, starting, usableActions, planner);
         // If the path has not been found
         if (!hasFoundPath)
         {
+          if (planner.Tracing) Trace.Script("No plan could be formulated!", planner);
           return new Plan();
         }
         
@@ -134,27 +152,28 @@ namespace Prototype
         //Trace.Script("Formulated plan: \n" + plan.Print(), planner);
         return plan;
       }
-
+      
       /// <summary>
       /// Looks for a solution, backtracking from the goal to the current world state
       /// </summary>
       /// <param name="parent"></param>
       /// <param name="actions"></param>
       /// <param name="goal"></param>
+      /// <param name="currentState"></param>
       /// <returns></returns>
-      static bool FindSolution(List<Node> path, Node parent, Action[] actions)
+      static bool FindSolution(List<Node> path, Node parent, Action[] actions, Planner planner)
       {
         bool solutionFound = false;
         Node cheapestNode = null;
 
-        //Trace.Script("Looking to fulfill the preconditions:" + parent.State.Print());
-
+        if (planner.Tracing) Trace.Script("Looking to fulfill the preconditions:" + parent.State.Print());
+        
         // Look for actions that fulfill the preconditions
         foreach(var action in actions)
         {
           if (action.Effects.Satisfies(parent.State))
           {
-            //Trace.Script(action.Description + " satisfies the preconditions");
+            if (planner.Tracing) Trace.Script(action.Description + " satisfies the preconditions");
 
             // Create a new node
             var node = new Node(parent, parent.Cost + action.Cost, action.Preconditions, action);
@@ -165,19 +184,23 @@ namespace Prototype
           }
           else
           {
-            //Trace.Script(action.Description + " does not satisfy the preconditions");
+            if (planner.Tracing) Trace.Script(action.Description + " does not satisfy the preconditions");
           }
         }
 
+        // If no satisfactory action was found
         if (cheapestNode == null)
         {
-          //Trace.Script("No actions could fulfill these preconditions");
+          // If the current state is already fulfilling this condition, we are done!
+          if (planner.CurrentState.Satisfies(parent.State)) return true;
+          // Otherwise, no valid solution could be found
+          if (planner.Tracing) Trace.Script("No actions could fulfill these preconditions");
           return false;
         }
 
         // Add the cheapest node to the path
         path.Add(cheapestNode);
-        //Trace.Script("Adding " + cheapestNode.Action.Description + " to the path");
+        if (planner.Tracing) Trace.Script("Adding " + cheapestNode.Action.Description + " to the path");
 
         // If this action has no more preconditions left to fulfill
         if (cheapestNode.Action.Preconditions.IsEmpty)
@@ -189,7 +212,7 @@ namespace Prototype
         else
         {
           var actionSubset = (from remainingAction in actions where !remainingAction.Equals(cheapestNode.Action) select remainingAction).ToArray();
-          bool found = FindSolution(path, cheapestNode, actionSubset);
+          bool found = FindSolution(path, cheapestNode, actionSubset, planner);
           if (found)solutionFound = true;
         }
 
@@ -219,8 +242,6 @@ namespace Prototype
         var path = new Queue<Action>();
         return path;       
       }
-
-
 
       static float CalculateHeuristicCost(Node node, Node target)
       {

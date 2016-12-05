@@ -35,6 +35,7 @@ namespace Prototype
     public class PlanFormulatedEvent : Stratus.Event { public Plan Plan;
       public PlanFormulatedEvent(Plan plan) { Plan = plan; } }
     public class PlanExecutedEvent : Stratus.Event {}
+    public class ReplanEvent : Stratus.Event {}
 
     //------------------------------------------------------------------------/
     // Properties
@@ -128,6 +129,18 @@ namespace Prototype
     }
     
     /// <summary>
+    /// Received when an action has been canceled in the middle of a plan. This will make this
+    /// agent replan.
+    /// </summary>
+    /// <param name="e"></param>
+    void OnActionCanceledEvent(Action.CanceledEvent e)
+    {
+      Trace.Script("Action forcefully canceled. Replanning", this);
+      this.CurrentAction.Reset();
+      this.MakePlan();
+    }
+
+    /// <summary>
     /// Received when an action has finished
     /// </summary>
     /// <param name="e"></param>
@@ -146,8 +159,9 @@ namespace Prototype
       // If there's nothing actions left in the plan, reassess?
       if (CurrentPlan.IsFinished)
       {
+        this.CurrentGoal.Finish(this);
         this.gameObject.Dispatch<PlanExecutedEvent>(new PlanExecutedEvent());
-        if (Tracing) Trace.Script("The plan for " + this.CurrentGoal.Name + " has been fulfilled!", this);
+        //if (Tracing) Trace.Script("The plan for " + this.CurrentGoal.Name + " has been fulfilled!", this);
         //this.gameObject.Dispatch<Agent.>
         return;
       }
@@ -196,12 +210,6 @@ namespace Prototype
         }
 
       }
-      
-      //if (Tracing)
-      //{
-      //  Trace.Script(InteractivesInRange, this);
-      //}
-
     }
 
     /// <summary>
