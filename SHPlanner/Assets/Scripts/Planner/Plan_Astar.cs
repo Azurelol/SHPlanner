@@ -74,7 +74,7 @@ namespace Prototype
         //------------------------------------------------------------------------/
         // Properties
         //------------------------------------------------------------------------/
-        bool Tracing = true;
+        bool Tracing = false;
         List<Node> OpenList = new List<Node>();
         Dictionary<WorldState, Action> ActionEffectsTable = new Dictionary<WorldState, Action>();
         Node StartingNode, DestinationNode;
@@ -118,9 +118,6 @@ namespace Prototype
           {
             ActionEffectsTable.Add(action.Effects, action);
           }
-
-
-
         }
 
         /// <summary>
@@ -135,12 +132,12 @@ namespace Prototype
           {
             // Pop the cheapest node off the open list
             var parent = FindCheapest();
-            Trace.Script("Iteration #" + CurrentIteration + " | Parent = " + parent.Description);
+            if (Tracing) Trace.Script("Iteration #" + CurrentIteration + " | Parent = " + parent.Description);
             
             // if the a route to the starting node was found...
             if (IsFinished(parent))
             {
-              Trace.Script("Valid path found!");
+              if (Tracing) Trace.Script("Valid path found!");
               return BuildPath(parent);
             }
             // For all neighboring child nodes...
@@ -175,7 +172,7 @@ namespace Prototype
           }
 
           // If the open list is empty, no path was found
-          Trace.Script("No valid path found!");
+          if (Tracing) Trace.Script("No valid path found!");
           return new List<Action>();
         }
 
@@ -194,13 +191,13 @@ namespace Prototype
         {
           if (list == Node.ListStatus.Open)
           {
-            Trace.Script(node.Description + " has been added to the open list!");
+            if (Tracing) Trace.Script(node.Description + " has been added to the open list!");
             OpenList.Add(node);
             node.Status = Node.ListStatus.Open;
           }
           else
           {
-            Trace.Script(node.Description + " has been removed from the open list!");
+            if (Tracing) Trace.Script(node.Description + " has been removed from the open list!");
             OpenList.Remove(node);
             node.Status = Node.ListStatus.Closed;
           }
@@ -220,7 +217,7 @@ namespace Prototype
               cheapestIndex = i;
           }
           var cheapestNode = OpenList[cheapestIndex];
-          Trace.Script("Cheapest node = " + cheapestNode.Action);
+          if (Tracing) Trace.Script("Cheapest node = " + cheapestNode.Action);
           return cheapestNode;
         }
 
@@ -232,7 +229,7 @@ namespace Prototype
         Node[] FindNeighbors(Node node)
         {
           var neighbors = new List<Node>();
-          Trace.Script("Looking for neighboring nodes (actions) for the node: " + node.Description + " with preconditions: " + node.State.Print());
+          if (Tracing) Trace.Script("Looking for neighboring nodes (actions) for the node: " + node.Description + " with preconditions: " + node.State.Print());
 
           // Check for actions that satisfy the preconditions of this node
           foreach(var action in ActionEffectsTable)
@@ -241,14 +238,14 @@ namespace Prototype
             // If the action satisfies the preconditions, add it as a possible
             // neighbor
             if (state.Satisfies(node.State)) {
-              Trace.Script(action.Value + " satifies the condition = " + node.State.Print());
+              if (Tracing) Trace.Script(action.Value + " satifies the condition = " + node.State.Print());
               var preconditions = action.Value.Preconditions;
               neighbors.Add(new Node(node, action.Value.Cost, preconditions, action.Value));
             }
           }
 
           if (neighbors.Count == 0)
-            Trace.Script("No nodes satisfy the condition!");
+            if (Tracing) Trace.Script("No nodes satisfy the condition!");
 
           return neighbors.ToArray();
         }
@@ -264,7 +261,7 @@ namespace Prototype
           //bool alreadySatisfied = DestinationNode.State.Satisfies(node.State);
           if (node.State.IsEmpty || DestinationNode.State.Satisfies(node.State))
           {
-            Trace.Script("No preconditions left to fulfill for node: " + node.Description);
+            if (Tracing) Trace.Script("No preconditions left to fulfill for node: " + node.Description);
             return true;
           }
           return false;

@@ -16,6 +16,8 @@ namespace Prototype
   public class Blackboard
   {
     public int Money = 0;
+    public int ToolCharges = 0;
+
   }
 
 }

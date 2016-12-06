@@ -23,12 +23,13 @@ namespace Prototype
     protected override void OnEquip()
     {
       RemainingCharges--;
-      //Trace.Script("Tool equipped. Charges left = " + this.RemainingCharges, this);
+      Trace.Script("Tool equipped. Charges left = " + this.RemainingCharges, this);
     }
 
     protected override void OnEquipmentBegin()
     {
-      RemainingCharges = Charges;
+      //Trace.Script("Resetting charges");
+      //RemainingCharges = Charges;
     }
 
     protected override void OnEquipmentEnd()

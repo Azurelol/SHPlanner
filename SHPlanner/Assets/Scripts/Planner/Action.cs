@@ -23,28 +23,31 @@ namespace Prototype
     public class StartedEvent : ActionEvent { }
     public class EndedEvent : ActionEvent { }
     public class CanceledEvent : ActionEvent { }
-    //public class ModifyWorldStateEvent : Stratus.Event { public WorldState Effects;
-    //  public ModifyWorldStateEvent(WorldState state) { Effects = state; } }
 
     //------------------------------------------------------------------------/
     // Properties
     //------------------------------------------------------------------------/
-    bool Active = false;
-    public MonoBehaviour Target;
+    [Tooltip("The current target of this action")]
+    [ReadOnly] public MonoBehaviour Target;
+    [Tooltip("Whether this action can be interrupted")]
+    public bool IsInterruptible = false;
+    [Tooltip("The cost of this action. Used by the planner's A*")]
+    public float Cost = 1f;
+    [Tooltip("How long it takes to execute this action")]
+    public float Speed = 1f;
+    [Tooltip("The range at which this action needs to be within the target")]
+    public float Range = 2f;
+
+    public float Progress { get { return ProgressTimer.Progress; } }
+    public abstract string Description { get; }
+    protected abstract bool RequiresRange { get; }
     protected Agent Agent;
     protected Planner Planner;
     public WorldState Preconditions = new WorldState();
     public WorldState Effects = new WorldState();
-    public bool IsInterruptible = false;
-    public float Cost = 1f;
-    [Tooltip("How long it takes to execute this action")]
-    public float Speed = 1f;
     protected Countdown ProgressTimer = new Countdown();
-    [Tooltip("The range at which this action needs to be within the target")]
-    public float Range = 2f;
-    public float Progress { get { return ProgressTimer.Progress; } }
-    public abstract string Description { get; }
-    protected abstract bool RequiresRange { get; }
+    bool Active = false;
+    bool Tracing = false;
 
     //------------------------------------------------------------------------/
     // Inheritance
@@ -98,12 +101,12 @@ namespace Prototype
     /// </summary>
     public void Begin()
     {
-      Trace.Script("Beginning '" + Description + "'", this);
+      if (Tracing) Trace.Script("Beginning '" + Description + "'", this);
 
       // If not yet within range of the target
       if (this.RequiresRange && !IsWithinRange())
       {
-        this.ApproachNow();
+        this.Approach();
       }
 
       this.OnBegin();
@@ -155,7 +158,7 @@ namespace Prototype
     /// </summary>
     void End()
     {
-      Trace.Script("Ending '" + Description + "'", this);
+      if (Tracing) Trace.Script("Ending '" + Description + "'", this);
       this.OnEnd();
       //Trace.Script(Description + " : Applying effects to the state", this.Agent);
       var e = new Action.EndedEvent();
@@ -165,28 +168,33 @@ namespace Prototype
       this.Reset();
     }
 
-    void ApproachNow()
+    /// <summary>
+    /// Approaches the current target of this action
+    /// </summary>
+    void Approach()
     {
-      Trace.Script("Now approaching " + this.Target, this);
       var path = AStar.FindPath(transform.position, this.Target.transform.position).ToArray();
-      Trace.Script("Path between '" + transform.position + "' and '" + this.Target.transform.position + "': ", this);
-      foreach (var point in path)
+
+      if (Tracing)
       {
-        Trace.Script("- " + point.Location, this);
-      } 
-      StartCoroutine(this.ApproachRoutine(path));
+        Trace.Script("Now approaching " + this.Target, this);
+        Trace.Script("Path between '" + transform.position + "' and '" + this.Target.transform.position + "': ", this);
+        foreach (var point in path)
+        {
+          Trace.Script("- " + point.Location, this);
+        } 
+      }
+
+      StartCoroutine(this.FollowPathRoutine(path));
     }
-
-    
-    // Approach the target
-    IEnumerator ApproachRoutine(WayPoint[] path)
+        
+    /// <summary>
+    /// Follows a path of waypoints to the currnet target
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    IEnumerator FollowPathRoutine(WayPoint[] path)
     {
-      //Trace.Script("Path:");
-      //foreach (var point in path)
-      //{
-      //  Trace.Script("- " + point.Location, this);
-      //} 
-
       foreach (var point in path)
       {
         float step = this.Agent.MovementSpeed * Time.deltaTime;
@@ -202,44 +210,22 @@ namespace Prototype
           yield return new WaitForFixedUpdate();
         }
       }
-
-      //if (!IsWithinRange())
-      //  this.ApproachNow();
-
-      Trace.Script("Reached " + this.Target, this);
-
-      //while (!IsWithinRange())
-      //{
-      //
-      //}
-      //
-      //int currentPoint = 0;
-      //Vector3 target = path[currentPoint].Location;
-      //while (currentPoint == path.Length - 1)
-      //{
-      //  Vector3 move = Vector3.zero;
-      //  float dist = 2;
-      //  var loc = path[currentPoint].Location;
-      //  dist = (path[currentPoint].Location - transform.position).sqrMagnitude;
-      //  if (dist < 1 && currentPoint != path.Length - 1)
-      //  {
-      //    ++currentPoint;
-      //    target = path[currentPoint].Location;
-      //  }
-      //
-      //  if (true)
-      //  {
-      //    move = target - transform.position;
-      //    move = move.normalized * Time.deltaTime;
-      //  }
-      //
-      //  Trace.Script("Moving!", this);
-      //  transform.position += move;
-      //}
-      //
-      //yield return null;
+      if (Tracing) Trace.Script("Reached " + this.Target, this);
     }
-    
+
+    /// <summary>
+    /// Approches the target in a straight line
+    /// </summary>
+    IEnumerator ApproachRoutine()
+    {
+      while (!IsWithinRange())
+      {
+        this.transform.localPosition = Vector3.MoveTowards(this.transform.position, this.Target.transform.position, Time.deltaTime * this.Agent.MovementSpeed);
+        this.transform.LookAt(this.Target.transform);
+        yield return new WaitForFixedUpdate();
+      }
+    }
+
     /// <summary>
     /// Checks whether the agent is within range of its target
     /// </summary>
@@ -251,14 +237,7 @@ namespace Prototype
       return false;
     }
 
-    /// <summary>
-    /// Approches the target in a straight line at a speed specified by the agent.
-    /// </summary>
-    void Approach()
-    {
-      this.transform.localPosition = Vector3.MoveTowards(this.transform.position, this.Target.transform.position, Time.deltaTime * this.Agent.MovementSpeed);
-      this.transform.LookAt(this.Target.transform);
-    }
+
 
 
   } 

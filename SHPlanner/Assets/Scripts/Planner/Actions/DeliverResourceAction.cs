@@ -27,6 +27,7 @@ namespace Prototype
     {
       Preconditions.Apply("HasResource", true);
       Effects.Apply("HasResource", false);
+      Effects.Apply("HasMoney", true);
       Effects.Apply("HasDeliveredResource", true);
     }
 
