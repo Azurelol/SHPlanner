@@ -26,8 +26,10 @@ public static class AStar
         
     }
 
-    public static List<AStarNode> FindPath(AStarNode startNode, AStarNode endNode)
+    public static List<WayPoint> FindPath(Vector3 start, Vector3 end)
     {
+        var startNode = WaypointGraph.GetWaypointAroundVec(start);
+        var endNode = WaypointGraph.GetWaypointAroundVec(end);
         //Push Start Node onto the Open List
         PointList openList = new PointList();
         
@@ -37,59 +39,65 @@ public static class AStar
         while (!openList.Empty())
         {
             //Pop cheapest node off Open List (parent node)
-            AStarNode node = openList.Remove();
+            WayPoint node = openList.Remove();
             //If node is the Goal Node, then path found (RETURN “found”)
-            if ((node.MyPoint.Location- endNode.MyPoint.Location).sqrMagnitude < 0.5)
+            if ((node.Location- endNode.Location).sqrMagnitude < 0.5)
             {
-                return ConstructPath(node, startNode);
+                return ConstructPath(node, startNode, end);
             }
             
             //For (all neighboring child nodes) {
-            foreach (KeyValuePair<WayPoint, bool> neighbor in node.MyPoint.Neighbors)
+            foreach (KeyValuePair<WayPoint, bool> neighbor in node.Neighbors)
             {
                 //Compute its cost, f(x) = g(x) + h(x)
-                AStarNode neighborNode = new AStarNode(neighbor.Key);
-                var point = neighborNode.MyPoint.Location;
-                var endPoint = endNode.MyPoint.Location;
-                float dist = (point - node.MyPoint.Location).magnitude;
+                var point = neighbor.Key.Location;
+                var endPoint = endNode.Location;
+                float dist = (point - node.Location).magnitude;
                 float given = node.GivenCost + dist;
-                
-                neighborNode.Cost = given + OctalCost(Mathf.Abs(endPoint.x - point.x), Mathf.Abs(endPoint.y - point.y), Mathf.Abs(endPoint.z - point.z));
 
-                neighborNode.GivenCost = given;
+                neighbor.Key.Cost = given + EuclidianCost(endPoint, point);
+
+                neighbor.Key.GivenCost = given;
                 //If child node isn’t on Open or Closed list, put it on Open List.
-                if (!openList.Count(neighborNode))
+                if (!neighbor.Key.OnClosedList && !openList.Count(neighbor.Key))
                 {
-                    openList.Add(neighborNode);
+                    neighbor.Key.parent = node;
+                    
+                    openList.Add(neighbor.Key);
                 }
                 //If child node is on Open or Closed List, AND this new one is cheaper,
-                else if (openList.Get(neighborNode).Cost > neighborNode.Cost)
+                else if (openList.Count(neighbor.Key) && openList.Get(neighbor.Key).Cost > neighbor.Key.Cost)
                 {
                     //	then take the old expensive one off both lists and put this new 	cheaper one on the Open List.
-                    openList.Add(neighborNode);
+                   // openList.Add(neighborNode);
                 }
                 //}
-                //Place parent node on the Closed List (we’re done with it)
                 //If taken too much time this frame (or in single step mode), 
                 //	 abort search for now and resume next frame (RETURN “working”)
                 //}
             }
+
+            //Place parent node on the Closed List (we’re done with it)
+            node.OnClosedList = true;
         }
         //Open List empty, thus no path possible (RETURN “fail”)
-        return new List<AStarNode>();
+        return new List<WayPoint>();
     }
 
-    private static List<AStarNode> ConstructPath(AStarNode endNode, AStarNode startNode)
+    private static List<WayPoint> ConstructPath(WayPoint endNode, WayPoint startNode, Vector3 actualEnd)
     {
-        AStarNode curNode = endNode;
-        List<AStarNode> ret = new List<AStarNode>();
-
+        WayPoint curNode = endNode;
+        List<WayPoint> ret = new List<WayPoint>();
+        ret.Add(new WayPoint(actualEnd, 0));
         while (curNode != startNode)
         {
             ret.Add(curNode);
-
             curNode = curNode.parent;
         }
+
+        ret.Add(startNode);
+
+        ret.Reverse();
 
         return ret;
     }
@@ -102,6 +110,12 @@ public static class AStar
         max = max > zDiff ? max : zDiff;
 
         return min * SQRTWO + max - min;
+
+    }
+
+    private static float EuclidianCost(Vector3 p1, Vector3 p2)
+    {
+        return (p1 - p2).magnitude;
 
     }
 }

@@ -7,16 +7,16 @@ using System.Linq;
 public class PointList
 {
     
-    private Dictionary<int, AStarNode> _nodes = new Dictionary<int, AStarNode>();
+    private Dictionary<int, WayPoint> _nodes = new Dictionary<int, WayPoint>();
 
     public PointList()
     {
         
     }
-    public AStarNode Remove()
+    public WayPoint Remove()
     {
         var minNode = _nodes.First();
-        int minkey = 0;
+        int minkey = minNode.Key;
         foreach (var curNode in _nodes)
         {
             if (curNode.Value.Cost < minNode.Value.Cost)
@@ -31,12 +31,12 @@ public class PointList
         return minNode.Value;
     }
 
-    public void Add(AStarNode node)
+    public void Add(WayPoint node)
     {
         _nodes[hashify(node)] = node;
     }
 
-    public bool Count(AStarNode node)
+    public bool Count(WayPoint node)
     {
         return _nodes.ContainsKey(hashify(node));
     }
@@ -50,13 +50,13 @@ public class PointList
         return _nodes.Count <= 0;
     }
 
-    public AStarNode Get(AStarNode node)
+    public WayPoint Get(WayPoint node)
     {
         return _nodes[hashify(node)];
     }
 
-    private int hashify(AStarNode node)
+    private int hashify(WayPoint node)
     {
-        return (int) (((int) node.MyPoint.Location.x) ^ ((int)node.MyPoint.Location.y) ^ ((int)node.MyPoint.Location.z) + 0x9e3779b9 + (((int)node.MyPoint.Location.x) << 6) + (((int)node.MyPoint.Location.x) >> 2) + (((int)node.MyPoint.Location.z) >> 2));
+        return node.ID;
     }
 }

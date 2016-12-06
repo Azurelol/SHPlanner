@@ -11,10 +11,11 @@ public static class WaypointGraph
     public static bool Initialized = false;
     private const int _maxJumpHeight = 2;
     private const int _maxJumpLength = 100;
+    private const int _minWalkAngle = 45;
     private const float _marchingBoxHeight = 1.2f;
     private const float _minimumWalkHeight = 0.7f;
-    public static AStarNode endNode;
-    public static AStarNode startNode;
+    public static WayPoint endNode;
+    public static WayPoint startNode;
     private enum MarchResult
     {
         Valid,
@@ -25,6 +26,22 @@ public static class WaypointGraph
     {
         
     }
+
+    public static WayPoint GetWaypointAroundVec(Vector3 vec)
+    {
+        WayPoint ret = (WayPoint) _waypoints[0];
+        float minDist = (ret.Location - vec).sqrMagnitude;
+        foreach (WayPoint way in _waypoints)
+        {
+            if ((way.Location - vec).sqrMagnitude < minDist)
+            {
+                ret = way;
+                minDist = (way.Location - vec).sqrMagnitude;
+            }
+        }
+
+        return ret;
+    }
     /// <summary>
     /// initialization
     /// </summary>
@@ -33,18 +50,18 @@ public static class WaypointGraph
         Initialized = true;
 
         var objs = GameObject.FindGameObjectsWithTag("Waypoint");
-
+        int id = 0;
         foreach (var obj in objs)
         {
-            var way = new WayPoint(obj.transform.position);
+            var way = new WayPoint(obj.transform.position, id++);
             _waypoints.Add(way);
-            if (obj.name == "GameObject (28)")
+            if (obj.name == "way10")
             {
-                endNode = new AStarNode(way);
+                endNode = way;
             }
-            else if(obj.name == "GameObject (24)")
+            else if(obj.name == "way")
             {
-                startNode = new AStarNode(way);
+                startNode = way;
             }
             GameObject.Destroy(obj);
         }
@@ -173,19 +190,19 @@ public static class WaypointGraph
         RaycastHit hit1 = new RaycastHit();
         Physics.Raycast(ray1, out hit1);
         float lastHeight = hit1.point.y;
-        if (toVec.y > _minimumWalkHeight)
-        {
-            Vector2 horizontalVec = new Vector2(toVec.x,toVec.z);
+        //if (toVec.y > _minimumWalkHeight)
+        //{
+        //    Vector2 horizontalVec = new Vector2(toVec.x,toVec.z);
 
-            if (toVec.y > _maxJumpHeight || horizontalVec.sqrMagnitude > _maxJumpLength)
-            {
-                return MarchResult.Invalid;
-            }
-            else
-            {
-                return MarchResult.RequiresJump;
-            }
-        }
+        //    if (toVec.y > _maxJumpHeight || horizontalVec.sqrMagnitude > _maxJumpLength)
+        //    {
+        //        return MarchResult.Invalid;
+        //    }
+        //    else
+        //    {
+        //        return MarchResult.RequiresJump;
+        //    }
+        //}
 
         for (int i = 0; i < length * density; ++i)
         {
@@ -196,9 +213,10 @@ public static class WaypointGraph
             {
                 continue;
             }
-            if (hit.point.y > lastHeight + _minimumWalkHeight)
+            
+            if (hit.point.y > lastHeight + _minimumWalkHeight || Vector3.Angle(Vector3.up, hit.normal) > 30)
             {
-                if (toVec.sqrMagnitude > _maxJumpLength)
+                if (toVec.sqrMagnitude > _maxJumpLength || toVec.y > _maxJumpHeight)
                 {
                     return MarchResult.Invalid;
                 }
