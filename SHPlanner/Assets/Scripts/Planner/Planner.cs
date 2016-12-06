@@ -13,6 +13,7 @@ using System.Text;
 
 namespace Prototype 
 {
+  [RequireComponent(typeof(Blackboard))]
   [RequireComponent(typeof(Agent))]
   public partial class Planner : StratusBehaviour 
   {    
@@ -61,6 +62,11 @@ namespace Prototype
     public WorldState CurrentState = new WorldState();
 
     /// <summary>
+    /// The blackboard this agent is using.
+    /// </summary>
+    public Blackboard Blackboard;
+
+    /// <summary>
     /// The range at which objects will be considered.
     /// </summary>
     public float ConsiderationRange = 50.0f;
@@ -87,7 +93,8 @@ namespace Prototype
     /// Initializes the planner.
     /// </summary>
     void Awake()
-    {      
+    {
+      this.Blackboard = GetComponent<Blackboard>();
       this.Subscribe();
       this.AddActions();
       //this.CurrentPlan =  this.Formulate(CurrentGoal);

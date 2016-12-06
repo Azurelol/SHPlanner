@@ -17,69 +17,36 @@ namespace Prototype
 {
   public partial class Planner : StratusBehaviour
   {
+    /// <summary>
+    /// A plan is a sequence of actions that will fulfill a specified goal world state,
+    /// given a starting world state.
+    /// </summary>
     public partial class Plan
     {
       //------------------------------------------------------------------------/
-      // Definitions
-      //------------------------------------------------------------------------/
-      /// <summary>
-      /// Represents a node in the graph of actions.
-      /// </summary>
-      class Node
-      {
-        public enum ListStatus { OpenList, ClosedList }
-
-        /// <summary>
-        /// The parent of this node, whose preconditions this node fulfills
-        /// </summary>
-        public Node Parent;
-        /// <summary>
-        /// Whether this node is on the open or closed list
-        /// </summary>
-        public ListStatus Status;
-        /// <summary>
-        /// f(x) = g(x) + h(x): The current cost of the node
-        /// </summary>
-        public float Cost;
-        /// <summary>
-        /// g(x): How much it costs to get back to the starting node
-        /// </summary>
-        public float GivenCost = 0f;
-        /// <summary>
-        /// Everytime we do a search, we increment this. Behaves like a dirty bit.
-        /// </summary>
-        public int Iteration = 0;
-
-        public WorldState State;
-        public Action Action;
-        public Node(Node parent, float cost, WorldState state, Action action)
-        {
-          Parent = parent;
-          Cost = cost;
-          State = state;
-          Action = action;
-        }
-
-
-      }
-
-      
-      //------------------------------------------------------------------------/
-      // Methods
+      // Properties
       //------------------------------------------------------------------------/
       /// <summary>
       /// A sequence of actions, where each action represents a state transition.
       /// </summary>
       public LinkedList<Action> Actions = new LinkedList<Prototype.Action>();
+      /// <summary>
+      /// Whether this plan has finished running
+      /// </summary>
       public bool IsFinished { get { return Actions.Count == 0; } }
-
+      /// <summary>
+      /// Whether A* should be used to formulate the plan
+      /// </summary>
+      static bool UseAstar = false;
+      //------------------------------------------------------------------------/
+      // Methods
+      //------------------------------------------------------------------------/
       /// <summary>
       /// Gets the next action in the sequence.
       /// </summary>
       /// <returns></returns>
       public Action Next()
-      {
-        
+      {        
         var action = Actions.First();
         Actions.RemoveFirst();
         return action;
@@ -111,16 +78,6 @@ namespace Prototype
                              where action.CheckContextPrecondition() && !currentState.Satisfies(action.Effects)
                              select action).ToArray();
 
-        // Remove any actions whose effects the current world state already fulfills
-        //foreach(var action in usableActions)
-        //{
-        //  if (currentState.Satisfies(action.Effects))
-        //
-        //}
-
-        //var remainingActions = (from action in usableActions
-        //                        where currentState.Satisfies()
-
         if (planner.Tracing)
         {
           Trace.Script("Making plan to satisfy the goal '" + goal.Name + "' with preconditions:" + goal.DesiredState.Print(), planner);
@@ -129,27 +86,36 @@ namespace Prototype
             Trace.Script("- " + action.Description, planner);
         }
 
-        // Build up a tree of nodes
-        List<Node> path = new List<Node>();
-        Node starting = new Node(null, 0f, goal.DesiredState, null);
-        // Look for a solution, backtracking from the goal's desired world state until
-        // we have fulfilled every precondition leading up to it!
-        var hasFoundPath = FindSolution(path, starting, usableActions, planner);
-        // If the path has not been found
-        if (!hasFoundPath)
+        // The path of actions
+        List<Action> path;
+
+        if (Plan.UseAstar)
         {
-          if (planner.Tracing) Trace.Script("No plan could be formulated!", planner);
-          return new Plan();
+          AstarSearch search = new AstarSearch(currentState, goal.DesiredState, actions);
+          search.Initialize();
+          path = search.FindSolution();
         }
-        
-        //Trace.Script("The path has " + path.Count + " nodes!", planner);
-                      
+        else
+        {
+          // Build up a tree of nodes
+          path = new List<Action>();
+          AstarSearch.Node starting = new AstarSearch.Node(null, 0f, goal.DesiredState, null);
+          // Look for a solution, backtracking from the goal's desired world state until
+          // we have fulfilled every precondition leading up to it!
+          var hasFoundPath = FindSolution(path, starting, usableActions, planner);
+          // If the path has not been found
+          if (!hasFoundPath)
+          {
+            if (planner.Tracing) Trace.Script("No plan could be formulated!", planner);
+            return new Plan();
+          }
+        }
+                 
         // Make the plan
         var plan = new Plan();
-        foreach (var node in path)
-          plan.Add(node.Action);
-
-        //Trace.Script("Formulated plan: \n" + plan.Print(), planner);
+        foreach (var action in path)
+          plan.Add(action);
+                
         return plan;
       }
       
@@ -161,10 +127,10 @@ namespace Prototype
       /// <param name="goal"></param>
       /// <param name="currentState"></param>
       /// <returns></returns>
-      static bool FindSolution(List<Node> path, Node parent, Action[] actions, Planner planner)
+      static bool FindSolution(List<Action> path, AstarSearch.Node parent, Action[] actions, Planner planner)
       {
         bool solutionFound = false;
-        Node cheapestNode = null;
+        AstarSearch.Node cheapestNode = null;
 
         if (planner.Tracing) Trace.Script("Looking to fulfill the preconditions:" + parent.State.Print());
         
@@ -176,7 +142,7 @@ namespace Prototype
             if (planner.Tracing) Trace.Script(action.Description + " satisfies the preconditions");
 
             // Create a new node
-            var node = new Node(parent, parent.Cost + action.Cost, action.Preconditions, action);
+            var node = new AstarSearch.Node(parent, parent.Cost + action.Cost, action.Preconditions, action);
 
             // Replace the previous best node
             if (cheapestNode == null) cheapestNode = node;
@@ -199,7 +165,7 @@ namespace Prototype
         }
 
         // Add the cheapest node to the path
-        path.Add(cheapestNode);
+        path.Add(cheapestNode.Action);
         if (planner.Tracing) Trace.Script("Adding " + cheapestNode.Action.Description + " to the path");
 
         // If this action has no more preconditions left to fulfill
@@ -220,47 +186,9 @@ namespace Prototype
       }
 
       /// <summary>
-      /// Finds a solution to the goal using A*
+      /// Plans all the actions in this plan.
       /// </summary>
-      /// <param name="actions"></param>
-      /// <param name="goal"></param>
       /// <returns></returns>
-      static Queue<Action> FindSolution(WorldState startingState, Action[] actions, WorldState goal)
-      {
-        var openList = new List<Node>();
-        var startingNode = new Node(null, 0f, goal, null);
-        var destNode = new Node(null, 0f, startingState, null);
-
-        // 1. Put the starting node on the open list
-        PutOnList(openList, startingNode, Node.ListStatus.OpenList);
-
-        while (!openList.Empty())
-        {
-
-        }
-
-        var path = new Queue<Action>();
-        return path;       
-      }
-
-      static float CalculateHeuristicCost(Node node, Node target)
-      {
-        return 1f;
-      }
-
-      static void PutOnList(List<Node> openList, Node node, Node.ListStatus list)
-      {
-        if (list == Node.ListStatus.OpenList)
-        {
-          openList.Add(node);
-          node.Status = Node.ListStatus.OpenList;
-        }
-        else
-        {
-          node.Status = Node.ListStatus.ClosedList;
-        }
-      }
-
       public string Print()
       {
         var builder = new StringBuilder();
