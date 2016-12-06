@@ -9,6 +9,24 @@ public class WayPointBuilder : MonoBehaviour
   static int AgentLayer = 8;
   static int InteractiveObjectLayer = 9;
 
+    public void Toggle()
+    {
+        WaypointGraph.showVerts = !WaypointGraph.showVerts;
+        if (WaypointGraph.showVerts)
+        {
+            foreach (LineRenderer line in WaypointGraph.Lines)
+            {
+                line.material.color = new Color(0, 0, 0, 0);
+            }
+        }
+        else
+        { 
+            foreach (LineRenderer line in WaypointGraph.Lines)
+            {
+                line.material.color = Color.green / WaypointGraph.colorscale;
+            }
+        }
+    }
   void Awake()
   {
     WaypointGraph.Initialize();

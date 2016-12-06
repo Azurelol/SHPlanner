@@ -47,7 +47,7 @@ namespace Prototype
     public WorldState Effects = new WorldState();
     protected Countdown ProgressTimer = new Countdown();
     bool Active = false;
-    bool Tracing = false;
+    bool Tracing = true;
 
     //------------------------------------------------------------------------/
     // Inheritance
@@ -181,7 +181,7 @@ namespace Prototype
         Trace.Script("Path between '" + transform.position + "' and '" + this.Target.transform.position + "': ", this);
         foreach (var point in path)
         {
-          Trace.Script("- " + point.Location, this);
+          Trace.Script("- " + point.Key.Location, this);
         } 
       }
 
@@ -193,22 +193,27 @@ namespace Prototype
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    IEnumerator FollowPathRoutine(WayPoint[] path)
+    IEnumerator FollowPathRoutine(KeyValuePair<WayPoint, GameObject[]>[] path)
     {
       foreach (var point in path)
       {
         float step = this.Agent.MovementSpeed * Time.deltaTime;
-        transform.LookAt(point.Location);
-        while (Vector3.Distance(transform.position, point.Location) > 0.1f)
+        transform.LookAt(point.Key.Location);
+        while (Vector3.Distance(transform.position, point.Key.Location) > 0.1f)
         {
           if (IsWithinRange())
             break;
           // Keep the same y
           //point.Location.y = transform.position.y;
           //Trace.Script("MOVING!", this);
-          transform.position = Vector3.MoveTowards(transform.position, point.Location, step);
+          transform.position = Vector3.MoveTowards(transform.position, point.Key.Location, step);
           yield return new WaitForFixedUpdate();
         }
+
+          foreach (var obj in point.Value)
+          {
+             obj.Destroy(); 
+          }
       }
       if (Tracing) Trace.Script("Reached " + this.Target, this);
     }
