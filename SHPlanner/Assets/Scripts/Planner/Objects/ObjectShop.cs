@@ -15,6 +15,10 @@ namespace Prototype
 {
   public class ObjectShop : InteractiveObject
   {
+    public class BuyToolEvent : Stratus.Event
+    {
+    }
+
     public Dictionary<string, int> Inventory = new Dictionary<string, int>();
 
     protected override void OnInteractiveObjectInitialized()
@@ -29,8 +33,14 @@ namespace Prototype
 
     protected override void OnSubscribe()
     {
+      this.gameObject.Connect<BuyToolEvent>(this.OnBuyToolEvent);
+    }
+
+    void OnBuyToolEvent(BuyToolEvent e)
+    {
 
     }
+
 
 
 

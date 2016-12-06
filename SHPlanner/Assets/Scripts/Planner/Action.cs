@@ -8,6 +8,7 @@
 /******************************************************************************/
 using UnityEngine;
 using Stratus;
+using System.Collections;
 using System.Collections.Generic;
 using System;
 
@@ -22,26 +23,31 @@ namespace Prototype
     public class StartedEvent : ActionEvent { }
     public class EndedEvent : ActionEvent { }
     public class CanceledEvent : ActionEvent { }
-    //public class ModifyWorldStateEvent : Stratus.Event { public WorldState Effects;
-    //  public ModifyWorldStateEvent(WorldState state) { Effects = state; } }
 
     //------------------------------------------------------------------------/
     // Properties
     //------------------------------------------------------------------------/
-    bool Active = false;
+    [Tooltip("The current target of this action")]
+    [ReadOnly] public MonoBehaviour Target;
+    [Tooltip("Whether this action can be interrupted")]
+    public bool IsInterruptible = false;
+    [Tooltip("The cost of this action. Used by the planner's A*")]
+    public float Cost = 1f;
+    [Tooltip("How long it takes to execute this action")]
+    public float Speed = 1f;
+    [Tooltip("The range at which this action needs to be within the target")]
+    public float Range = 2f;
+
+    public float Progress { get { return ProgressTimer.Progress; } }
+    public abstract string Description { get; }
+    protected abstract bool RequiresRange { get; }
     protected Agent Agent;
     protected Planner Planner;
     public WorldState Preconditions = new WorldState();
     public WorldState Effects = new WorldState();
-    public bool IsInterruptible = false;
-    public float Cost = 1f;
-    [Tooltip("How long it takes to execute this action")]
-    public float Speed = 1f;
     protected Countdown ProgressTimer = new Countdown();
-    [Tooltip("The range at which this action needs to be within the target")]
-    public float Range = 2f;
-    public float Progress { get { return ProgressTimer.Progress; } }
-    public abstract string Description { get; }
+    bool Active = false;
+    bool Tracing = false;
 
     //------------------------------------------------------------------------/
     // Inheritance
@@ -94,7 +100,15 @@ namespace Prototype
     /// Starts this action.
     /// </summary>
     public void Begin()
-    {            
+    {
+      if (Tracing) Trace.Script("Beginning '" + Description + "'", this);
+
+      // If not yet within range of the target
+      if (this.RequiresRange && !IsWithinRange())
+      {
+        this.Approach();
+      }
+
       this.OnBegin();
       this.Active = true;
     }
@@ -123,15 +137,20 @@ namespace Prototype
     /// </summary>
     protected virtual void Execute()
     {
+      // If not within range of the target, approach it
+      if (this.RequiresRange && !IsWithinRange())
+      {
+        //this.Approach();
+        return;
+      }
+
       // Start casting the action
       if (ProgressTimer.Update(Time.deltaTime))
       {
         //Trace.Script(Description + " : Executing!", this);
         this.OnExecute();
-      }
-      
+      }      
       //Trace.Script(Description + " : Casting action...", this);
-
     }    
 
     /// <summary>
@@ -139,6 +158,7 @@ namespace Prototype
     /// </summary>
     void End()
     {
+      if (Tracing) Trace.Script("Ending '" + Description + "'", this);
       this.OnEnd();
       //Trace.Script(Description + " : Applying effects to the state", this.Agent);
       var e = new Action.EndedEvent();
@@ -147,12 +167,77 @@ namespace Prototype
 
       this.Reset();
     }
-    
 
+    /// <summary>
+    /// Approaches the current target of this action
+    /// </summary>
     void Approach()
     {
+      var path = AStar.FindPath(transform.position, this.Target.transform.position).ToArray();
 
+      if (Tracing)
+      {
+        Trace.Script("Now approaching " + this.Target, this);
+        Trace.Script("Path between '" + transform.position + "' and '" + this.Target.transform.position + "': ", this);
+        foreach (var point in path)
+        {
+          Trace.Script("- " + point.Location, this);
+        } 
+      }
+
+      StartCoroutine(this.FollowPathRoutine(path));
     }
+        
+    /// <summary>
+    /// Follows a path of waypoints to the currnet target
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    IEnumerator FollowPathRoutine(WayPoint[] path)
+    {
+      foreach (var point in path)
+      {
+        float step = this.Agent.MovementSpeed * Time.deltaTime;
+        transform.LookAt(point.Location);
+        while (Vector3.Distance(transform.position, point.Location) > 0.1f)
+        {
+          if (IsWithinRange())
+            break;
+          // Keep the same y
+          //point.Location.y = transform.position.y;
+          //Trace.Script("MOVING!", this);
+          transform.position = Vector3.MoveTowards(transform.position, point.Location, step);
+          yield return new WaitForFixedUpdate();
+        }
+      }
+      if (Tracing) Trace.Script("Reached " + this.Target, this);
+    }
+
+    /// <summary>
+    /// Approches the target in a straight line
+    /// </summary>
+    IEnumerator ApproachRoutine()
+    {
+      while (!IsWithinRange())
+      {
+        this.transform.localPosition = Vector3.MoveTowards(this.transform.position, this.Target.transform.position, Time.deltaTime * this.Agent.MovementSpeed);
+        this.transform.LookAt(this.Target.transform);
+        yield return new WaitForFixedUpdate();
+      }
+    }
+
+    /// <summary>
+    /// Checks whether the agent is within range of its target
+    /// </summary>
+    /// <returns></returns>
+    bool IsWithinRange()
+    {
+      var targetDist = Vector3.Distance(this.Target.transform.position, this.transform.position);
+      if (targetDist <= this.Range) return true;
+      return false;
+    }
+
+
 
 
   } 

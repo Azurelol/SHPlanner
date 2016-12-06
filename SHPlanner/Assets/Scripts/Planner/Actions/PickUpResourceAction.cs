@@ -27,7 +27,7 @@ namespace Prototype
 
       // If there's resources in the refinery, it is valid
       if (depot.Resources > 0) return true;
-      Trace.Script("No resources available to pick up!", this);
+      //Trace.Script("No resources available to pick up!", this);
       return false;
     }
 

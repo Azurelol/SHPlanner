@@ -37,7 +37,7 @@ namespace Prototype
       /// <summary>
       /// Whether A* should be used to formulate the plan
       /// </summary>
-      static bool UseAstar = false;
+      static bool UseAstar = true;
       //------------------------------------------------------------------------/
       // Methods
       //------------------------------------------------------------------------/
@@ -58,7 +58,7 @@ namespace Prototype
       /// <param name="action"></param>
       public void Add(Action action)
       {
-        Actions.AddFirst(action);
+        Actions.AddLast(action);
       }
 
       /// <summary>
@@ -91,7 +91,7 @@ namespace Prototype
 
         if (Plan.UseAstar)
         {
-          AstarSearch search = new AstarSearch(currentState, goal.DesiredState, actions);
+          AstarSearch search = new AstarSearch(currentState, goal.DesiredState, usableActions);
           search.Initialize();
           path = search.FindSolution();
         }
@@ -116,6 +116,8 @@ namespace Prototype
         foreach (var action in path)
           plan.Add(action);
                 
+        //Trace.Script("Plan:")
+
         return plan;
       }
       

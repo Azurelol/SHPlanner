@@ -1,4 +1,4 @@
-/******************************************************************************/
+﻿/******************************************************************************/
 /*!
 @file   InteractAction.cs
 @author Christian Sagel
@@ -15,9 +15,9 @@ namespace Prototype
 {
   public abstract class InteractAction : Action
   {
-    [ReadOnly]
-    public InteractiveObject Target;
+    //[ReadOnly] public InteractiveObject Target;
     bool HasInteracted = false;
+    protected override bool RequiresRange { get { return true; } }
 
     protected abstract bool OnValidateTarget(InteractiveObject obj);
     protected abstract void OnInteract();
@@ -32,8 +32,8 @@ namespace Prototype
       if (!this.Target)
       {
         this.gameObject.Dispatch<CanceledEvent>(new CanceledEvent());
-      }           
-      
+      }
+
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ namespace Prototype
     {
       if (this.Target)
         this.Target.gameObject.Dispatch<InteractiveObject.InteractionEndedEvent>(new InteractiveObject.InteractionEndedEvent());
-    }    
+    }
 
     /// <summary>
     /// This action is validated as it hasn't interacted
@@ -61,7 +61,7 @@ namespace Prototype
       // Look for the target of this action
       this.FindTarget();
       return this.Target != null;
-    }    
+    }
 
     /// <summary>
     /// Sends an interact event to the object in question.
@@ -81,12 +81,7 @@ namespace Prototype
       //if (this.Target.CanBeUsed(this.Agent))
       //  return;
 
-      // If not within range of the target, approach it
-      if (!IsWithinRange())
-      {
-        this.Approach();
-        return;
-      }
+
 
 
 
@@ -100,7 +95,7 @@ namespace Prototype
       this.OnInteract();
       this.HasInteracted = true;
     }
-    
+
     protected override void OnReset()
     {
       this.OnInteractActionReset();
@@ -115,7 +110,7 @@ namespace Prototype
       var targets = new Dictionary<float, InteractiveObject>();
 
       // Look at the interactible objects that the agent has detected
-      foreach (var interactive in this.Planner.InteractivesInRange)
+      foreach (var interactive in this.Planner.Sensor.Interactives)
       {
         if (this.OnValidateTarget(interactive))
         {
@@ -137,7 +132,7 @@ namespace Prototype
       // Pick the nearest target
       InteractiveObject nearestTarget = null;
       float nearestDist = Mathf.Infinity;
-      foreach(var target in targets)
+      foreach (var target in targets)
       {
         if (target.Key < nearestDist)
         {
@@ -149,36 +144,5 @@ namespace Prototype
 
       //Trace.Script(Description + " : No valid target found!", this);
     }
-
-    /// <summary>
-    /// Checks whether the agent is within range of its target
-    /// </summary>
-    /// <returns></returns>
-    bool IsWithinRange()
-    {
-      var targetDist = Vector3.Distance(this.Target.transform.position, this.transform.position);
-      if (targetDist <= this.Range) return true;
-      return false;
-    }
-
-    /// <summary>
-    /// Approches the target in a straight line at a speed specified by the agent.
-    /// </summary>
-    void Approach()
-    {
-
-      //var dir = this.Target.transform.position - this.transform.position;
-      //var moveEvent = new Movement.MoveEvent(dir);
-      //moveEvent.Speed = 1f;      
-      //this.gameObject.Dispatch<Movement.MoveEvent>(new Movement.MoveEvent(dir));
-      //this.gameObject.Dispatch<Movement.LookAtEvent>(new Movement.LookAtEvent(dir));
-      this.transform.localPosition = Vector3.MoveTowards(this.transform.position, this.Target.transform.position, Time.deltaTime * this.Agent.MovementSpeed);
-      this.transform.LookAt(this.Target.transform);
-    }
-
-
   }
-
-
-
 }

@@ -12,11 +12,12 @@ using Stratus;
 
 namespace Prototype
 {
-  public class Blackboard : StratusBehaviour
+  [System.Serializable]
+  public class Blackboard
   {
     public int Money = 0;
-    
-    
+    public int ToolCharges = 0;
+
   }
 
 }

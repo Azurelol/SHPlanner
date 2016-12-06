@@ -36,6 +36,14 @@ namespace Prototype
         public bool Boolean;
         public float Float;
         public Vector3 Vector3;
+        public bool Compare(Union other)
+        {
+          if (this.Integer != other.Integer) return false;
+          if (this.Boolean != other.Boolean) return false;
+          if (this.Float != other.Float) return false;
+          if (this.Vector3 != other.Vector3) return false;
+          return true;
+        }
       }
 
       public string Name;
@@ -223,6 +231,22 @@ namespace Prototype
 
       // All symbols were a match
       return true;
+    }
+
+    /// <summary>
+    /// Checks whether this WorldState contains the given symbol with the same value
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    public bool Contains(Symbol symbol)
+    {
+      // Look for a matching symbol
+      if (Symbols.ContainsKey(symbol.Name))
+      {
+        if (Symbols[symbol.Name].Value.Compare(symbol.Value))
+          return true;
+      }
+      return false;
     }
 
     /// <summary>

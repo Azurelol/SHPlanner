@@ -13,7 +13,7 @@ using System.Text;
 
 namespace Prototype 
 {
-  [RequireComponent(typeof(Blackboard))]
+  [RequireComponent(typeof(Sensor))]
   [RequireComponent(typeof(Agent))]
   public partial class Planner : StratusBehaviour 
   {    
@@ -64,17 +64,12 @@ namespace Prototype
     /// <summary>
     /// The blackboard this agent is using.
     /// </summary>
-    public Blackboard Blackboard;
+    public Blackboard Blackboard = new Blackboard();
 
     /// <summary>
-    /// The range at which objects will be considered.
+    /// The sensor this planner is using
     /// </summary>
-    public float ConsiderationRange = 50.0f;
-
-    /// <summary>
-    /// A list of all interactive objects we can interact with.
-    /// </summary>
-    public List<InteractiveObject> InteractivesInRange = new List<InteractiveObject>();
+    public Sensor Sensor;
 
     /// <summary>
     /// List of all available actions to this planner.
@@ -94,7 +89,7 @@ namespace Prototype
     /// </summary>
     void Awake()
     {
-      this.Blackboard = GetComponent<Blackboard>();
+      this.Sensor = GetComponent<Sensor>();
       this.Subscribe();
       this.AddActions();
       //this.CurrentPlan =  this.Formulate(CurrentGoal);
@@ -183,11 +178,11 @@ namespace Prototype
     /// </summary>
     void MakePlan()
     {
-      this.Scan();
+      this.Sensor.Scan();
       this.CurrentPlan = Plan.Formulate(this, this.AvailableActions, this.CurrentState, this.CurrentGoal);
       if (this.CurrentPlan != null)
       {
-        //Trace.Script("Executing plan!", this);
+        Trace.Script("Executing new plan!", this);
         this.gameObject.Dispatch<PlanFormulatedEvent>(new PlanFormulatedEvent(this.CurrentPlan));
         this.ExecutePlan();
       }
@@ -198,26 +193,7 @@ namespace Prototype
       
     }
 
-    /// <summary>
-    /// Scans the world for objects we can interact with.
-    /// </summary>
-    /// <returns></returns>
-    void Scan()
-    {
-      InteractivesInRange.Clear();
 
-      var scan = Physics.OverlapSphere(transform.position, this.ConsiderationRange);
-      foreach(var hit in scan)
-      {
-        var interactive = hit.GetComponent<InteractiveObject>();
-        if (interactive != null)
-        {
-          //Trace.Script("Found " + interactive.Description, this);
-          InteractivesInRange.Add(interactive);
-        }
-
-      }
-    }
 
     /// <summary>
     /// Prints all actions available to this planner.
