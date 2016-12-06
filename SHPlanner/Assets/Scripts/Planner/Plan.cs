@@ -13,7 +13,7 @@ using System.Collections;
 using System.Linq;
 using System.Text;
 
-namespace Prototype 
+namespace Prototype
 {
   public partial class Planner : StratusBehaviour
   {
@@ -46,7 +46,7 @@ namespace Prototype
       /// </summary>
       /// <returns></returns>
       public Action Next()
-      {        
+      {
         var action = Actions.First();
         Actions.RemoveFirst();
         return action;
@@ -73,7 +73,7 @@ namespace Prototype
           action.Reset();
 
         // Get all valid actions whose context preconditions are true
-        var usableActions = (from action 
+        var usableActions = (from action
                              in actions
                              where action.CheckContextPrecondition() && !currentState.Satisfies(action.Effects)
                              select action).ToArray();
@@ -92,6 +92,7 @@ namespace Prototype
         if (Plan.UseAstar)
         {
           AstarSearch search = new AstarSearch(currentState, goal.DesiredState, usableActions);
+          search.Tracing = planner.Tracing;
           search.Initialize();
           path = search.FindSolution();
         }
@@ -110,17 +111,18 @@ namespace Prototype
             return new Plan();
           }
         }
-                 
+
+        // If no solution was found
+        if (path == null)
+          return null;
+
         // Make the plan
         var plan = new Plan();
         foreach (var action in path)
           plan.Add(action);
-                
-        //Trace.Script("Plan:")
-
         return plan;
       }
-      
+
       /// <summary>
       /// Looks for a solution, backtracking from the goal to the current world state
       /// </summary>
@@ -135,9 +137,9 @@ namespace Prototype
         AstarSearch.Node cheapestNode = null;
 
         if (planner.Tracing) Trace.Script("Looking to fulfill the preconditions:" + parent.State.Print());
-        
+
         // Look for actions that fulfill the preconditions
-        foreach(var action in actions)
+        foreach (var action in actions)
         {
           if (action.Effects.Satisfies(parent.State))
           {
@@ -181,7 +183,7 @@ namespace Prototype
         {
           var actionSubset = (from remainingAction in actions where !remainingAction.Equals(cheapestNode.Action) select remainingAction).ToArray();
           bool found = FindSolution(path, cheapestNode, actionSubset, planner);
-          if (found)solutionFound = true;
+          if (found) solutionFound = true;
         }
 
         return solutionFound;
@@ -194,8 +196,8 @@ namespace Prototype
       public string Print()
       {
         var builder = new StringBuilder();
-        foreach(var action in Actions)
-        {         
+        foreach (var action in Actions)
+        {
           builder.AppendLine("- " + action.Description);
         }
         return builder.ToString();

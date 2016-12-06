@@ -48,6 +48,7 @@ namespace Prototype
     protected Countdown ProgressTimer = new Countdown();
     bool Active = false;
     bool Tracing = false;
+    bool UseWaypoints = false;
 
     //------------------------------------------------------------------------/
     // Inheritance
@@ -185,7 +186,10 @@ namespace Prototype
         } 
       }
 
-      StartCoroutine(this.FollowPathRoutine(path));
+      if (this.UseWaypoints)
+        StartCoroutine(this.FollowPathRoutine(path));
+      else
+        StartCoroutine(this.ApproachRoutine());
     }
         
     /// <summary>

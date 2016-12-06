@@ -36,7 +36,7 @@ namespace Prototype
     public class PlanFormulatedEvent : Stratus.Event { public Plan Plan;
       public PlanFormulatedEvent(Plan plan) { Plan = plan; } }
     public class PlanExecutedEvent : Stratus.Event {}
-    public class ReplanEvent : Stratus.Event {}
+    public class ReplanEvent : Stratus.Event {}    
 
     //------------------------------------------------------------------------/
     // Properties
@@ -64,23 +64,28 @@ namespace Prototype
     /// <summary>
     /// The blackboard this agent is using.
     /// </summary>
-    public Blackboard Blackboard = new Blackboard();
+    public Blackboard Blackboard;
 
     /// <summary>
     /// The sensor this planner is using
     /// </summary>
-    public Sensor Sensor;
+    [HideInInspector] public Sensor Sensor;
 
     /// <summary>
     /// List of all available actions to this planner.
     /// </summary>
-    public Action[] AvailableActions;
+    [HideInInspector] public Action[] AvailableActions;
 
     /// <summary>
     /// Whether we are tracing for debugging purposes.
     /// </summary>
     public bool Tracing = false;
-    
+
+    /// <summary>
+    /// The agent this planner is working for
+    /// </summary>
+    Agent Agent;
+
     //------------------------------------------------------------------------/
     // Methods
     //------------------------------------------------------------------------/
@@ -90,6 +95,8 @@ namespace Prototype
     void Awake()
     {
       this.Sensor = GetComponent<Sensor>();
+      this.Agent = GetComponent<Agent>();
+      this.Blackboard = Agent.Blackboard;
       this.Subscribe();
       this.AddActions();
       //this.CurrentPlan =  this.Formulate(CurrentGoal);
@@ -100,6 +107,7 @@ namespace Prototype
     /// </summary>
     void Subscribe()
     {
+      this.gameObject.Connect<WorldState.ModifySymbolEvent>(this.OnModifySymbolEvent);
       this.gameObject.Connect<AssessEvent>(this.OnAssessEvent);
       this.gameObject.Connect<Action.EndedEvent>(this.OnActionEndedEvent);
     }
@@ -119,6 +127,15 @@ namespace Prototype
     void OnAssessEvent(AssessEvent e)
     {
       this.MakePlan();
+    }
+
+    /// <summary>
+    /// Modifies a single symbol of this planner's world state
+    /// </summary>
+    /// <param name="e"></param>
+    void OnModifySymbolEvent(WorldState.ModifySymbolEvent e)
+    {
+      this.CurrentState.Apply(e.Symbol);
     }
 
     /// <summary>
@@ -149,6 +166,7 @@ namespace Prototype
     void OnActionEndedEvent(Action.EndedEvent e)
     {
       // Modify the current world state due to the previous action
+      //Trace.Script("Applying the effects of the action " + e.Action.Description, this);
       this.CurrentState.Merge(e.Action.Effects);
       ExecutePlan();
     }
@@ -182,13 +200,13 @@ namespace Prototype
       this.CurrentPlan = Plan.Formulate(this, this.AvailableActions, this.CurrentState, this.CurrentGoal);
       if (this.CurrentPlan != null)
       {
-        Trace.Script("Executing new plan!", this);
+        if (Tracing) Trace.Script("Executing new plan!", this);
         this.gameObject.Dispatch<PlanFormulatedEvent>(new PlanFormulatedEvent(this.CurrentPlan));
         this.ExecutePlan();
       }
       else
       {
-        //Trace.Script("The plan could not be formulated!", this);
+        if (Tracing) Trace.Script("The plan could not be formulated!", this);
       }
       
     }

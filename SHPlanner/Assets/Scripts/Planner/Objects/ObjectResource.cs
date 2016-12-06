@@ -35,6 +35,10 @@ namespace Prototype
       this.gameObject.Connect<HarvestEvent>(this.OnHarvestEvent);
     }
 
+    protected override void OnInteraction(Agent user)
+    {      
+    }
+
     void OnHarvestEvent(HarvestEvent e)
     {
       this.Count--;
@@ -44,10 +48,6 @@ namespace Prototype
 
       if (this.Count <= 0) Destroy(this.gameObject);
     }
-
-
-
-
 
 
   }

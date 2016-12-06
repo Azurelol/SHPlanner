@@ -25,6 +25,15 @@ namespace Prototype
   public class WorldState
   {
     /// <summary>
+    /// Modifies a single symbol of the WorldState
+    /// </summary>
+    public class ModifySymbolEvent : Stratus.Event
+    {
+      public Symbol Symbol;
+      public ModifySymbolEvent(Symbol symbol) { Symbol = symbol; }
+    }
+
+    /// <summary>
     /// Represents a property in the world (that is relevant to the planner)
     /// </summary>
     public class Symbol
@@ -178,6 +187,11 @@ namespace Prototype
     /// <param name="symbol"></param>
     public void Apply(Symbol symbol)
     {
+      //if (symbol.Name == "HasTool")
+      //{
+      //  Trace.Script("HasTool is being set to = " + symbol.Value.Boolean);
+      //}
+
       if (Symbols.ContainsKey(symbol.Name))
         Symbols[symbol.Name].Value = symbol.Value;
       else

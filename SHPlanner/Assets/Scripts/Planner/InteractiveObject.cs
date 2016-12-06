@@ -30,6 +30,7 @@ namespace Prototype
 
     protected abstract void OnInteractiveObjectInitialized();
     protected abstract void OnInteractiveObjectDestroyed();
+    protected abstract void OnInteraction(Agent user);
     protected abstract void OnSubscribe();
 
     void Start()
@@ -48,6 +49,7 @@ namespace Prototype
     void OnInteractionStartedEvent(InteractionStartedEvent e)
     {
       this.CurrentUser = e.Source;
+      this.OnInteraction(e.Source);
     }
 
     void OnInteractionEndedEvent(InteractionEndedEvent e)

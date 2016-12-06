@@ -7,11 +7,15 @@
 */
 /******************************************************************************/
 using System;
+using UnityEngine;
+using Stratus;
 
 namespace Prototype
 {
   public class PickUpToolAction : InteractAction
   {
+    [Tooltip("How many charges are gained when picking up a tool")]
+    public int ChargesGained = 2;
     public override string Description { get { return "Pick up tool"; } }
 
     protected override void OnSetup()
@@ -28,7 +32,7 @@ namespace Prototype
 
     protected override void OnInteract()
     {
-      
+      Planner.Blackboard.Tool.Add(ChargesGained);
     }
 
     protected override void OnInteractActionReset()

@@ -10,6 +10,7 @@ using UnityEngine;
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using Stratus;
 
 namespace Prototype
 {
@@ -19,11 +20,12 @@ namespace Prototype
     {
     }
 
-    public Dictionary<string, int> Inventory = new Dictionary<string, int>();
+    //public Dictionary<string, int> Inventory = new Dictionary<string, int>();
+    public int ToolCost = 40;
 
     protected override void OnInteractiveObjectInitialized()
     {
-      Inventory.Add("Tool", 50);
+      //Inventory.Add("Tool", 50);
     }
 
     protected override void OnInteractiveObjectDestroyed()
@@ -41,10 +43,11 @@ namespace Prototype
 
     }
 
-
-
-
-
+    protected override void OnInteraction(Agent user)
+    {
+      Trace.Script("Tool bought! ", this);
+      user.Blackboard.Money.Consume(this.ToolCost);
+    }
   }
 
 }

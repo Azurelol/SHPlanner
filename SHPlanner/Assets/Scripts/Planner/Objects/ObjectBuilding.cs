@@ -18,9 +18,13 @@ namespace Prototype
 
     [Tooltip("How many processed resources it requires to build this")]
     public int ProcessedResourcesNeeded;
-    public float MaximumScale = 3f;
+    public float ScaleFactor = 3f;
     [HideInInspector] public int CurrentResources = 0;
     [HideInInspector] public bool IsFinished = false;
+/// <summary>
+    /// The current progress in the bar as a percentage (0% - 100%)
+    /// </summary>
+    public float Progress { get { if (CurrentResources == 0.0f) return 0.0f; return ( (float)CurrentResources / (float)ProcessedResourcesNeeded) * 100.0f; } }
 
     protected override void OnSubscribe()
     {
@@ -46,9 +50,13 @@ namespace Prototype
 
     void Scale()
     {
-      var scaling = ( ((float)(CurrentResources + 1)) * MaximumScale)/ (float)ProcessedResourcesNeeded ; 
+      var scaling = ( ((float)(CurrentResources + 1)) * ScaleFactor)/ (float)ProcessedResourcesNeeded ; 
       this.transform.localScale = this.transform.localScale * scaling;
     }
-    
+
+    protected override void OnInteraction(Agent user)
+    {
+      
+    }
   }
 }

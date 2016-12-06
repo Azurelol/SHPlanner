@@ -55,7 +55,7 @@ namespace Prototype
           {
             get
             {
-              if (Action) return Action.Description;
+              if (Action) return Action.Description + " (" + Cost + ")";
               return null;
             }
           }
@@ -71,10 +71,28 @@ namespace Prototype
           }
         }
 
+        /// <summary>
+        /// The results of this search.
+        /// </summary>
+        public struct Results
+        {
+          List<Action> Path;
+        }
+        
+        /// <summary>
+        /// Configuration parameters for this search
+        /// </summary>
+        public struct Configuration
+        {
+          public bool SaveSearch;
+          public bool Tracing;          
+        }
+
+
         //------------------------------------------------------------------------/
         // Properties
         //------------------------------------------------------------------------/
-        bool Tracing = false;
+        public bool Tracing = true;
         List<Node> OpenList = new List<Node>();
         Dictionary<WorldState, Action> ActionEffectsTable = new Dictionary<WorldState, Action>();
         Node StartingNode, DestinationNode;
@@ -82,6 +100,7 @@ namespace Prototype
         WorldState StartState;
         WorldState EndState;
         Action[] Actions;
+        public bool SaveSearch = false;
         int CurrentIteration = 0;
 
         /// <summary>
@@ -173,12 +192,12 @@ namespace Prototype
 
           // If the open list is empty, no path was found
           if (Tracing) Trace.Script("No valid path found!");
-          return new List<Action>();
+          return null;
         }
 
         static float CalculateHeuristicCost(Node node, Node target)
         {
-          return 0f;
+          return node.Action.Cost;
         }
 
         /// <summary>
@@ -214,7 +233,11 @@ namespace Prototype
           {
             var node = OpenList[i];
             if (node.Cost < OpenList[cheapestIndex].Cost)
+            {
               cheapestIndex = i;
+              if (Tracing) Trace.Script("Current cheapest = " + OpenList[cheapestIndex].Description);
+            }
+            else if (Tracing) Trace.Script(OpenList[i].Description + " is not cheaper than " + OpenList[cheapestIndex].Description);
           }
           var cheapestNode = OpenList[cheapestIndex];
           if (Tracing) Trace.Script("Cheapest node = " + cheapestNode.Action);

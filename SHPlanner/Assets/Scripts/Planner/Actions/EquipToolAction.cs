@@ -14,16 +14,26 @@ namespace Prototype
 {
   public class EquipToolAction : EquipmentAction
   {
-    [Tooltip("How many times the tool can be used before it breaks")]
-    public int Charges = 3;
-    int RemainingCharges;
+    //[Tooltip("How many times the tool can be used before it breaks")]
+    //public int Charges = 3;
+    //int RemainingCharges;
 
     public override string Description { get { return "Equip tool"; } }
 
     protected override void OnEquip()
     {
-      RemainingCharges--;
-      Trace.Script("Tool equipped. Charges left = " + this.RemainingCharges, this);
+      //Trace.Script("Tool equipped!", this);
+      Planner.Blackboard.Tool.Consume();
+      if (Planner.Blackboard.Tool.Charges <= 0)
+      {
+        //Trace.Script("All charges consumed. The tool broke!", this);
+        this.Planner.gameObject.Dispatch<WorldState.ModifySymbolEvent>(new WorldState.ModifySymbolEvent(new WorldState.Symbol("HasTool", false)));
+        //Effects.Apply("HasTool", false);
+      }
+      else
+      {
+        //Trace.Script("Charges remain on the tool!", this);
+      }
     }
 
     protected override void OnEquipmentBegin()
@@ -39,8 +49,8 @@ namespace Prototype
 
     protected override void OnSetup()
     {
-      Preconditions.Apply(new WorldState.Symbol("HasTool", true));
-      Effects.Apply(new WorldState.Symbol("EquippedTool", true));
+      Preconditions.Apply("HasTool", true);
+      Effects.Apply("EquippedTool", true);
     }
     
   }

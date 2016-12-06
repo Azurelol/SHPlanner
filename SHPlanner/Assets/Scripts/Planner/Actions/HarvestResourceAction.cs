@@ -34,8 +34,7 @@ namespace Prototype
     }
 
     protected override void OnInteractActionReset()
-    {
-      //Effects.Apply(new WorldState.Symbol("HasResource", false));
+    {      
     }
   }
 }

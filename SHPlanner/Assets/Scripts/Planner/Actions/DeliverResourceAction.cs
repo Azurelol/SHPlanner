@@ -35,6 +35,7 @@ namespace Prototype
     {
       var delivery = new ObjectResource.DropOffEvent();
       this.Target.gameObject.Dispatch<ObjectResource.DropOffEvent>(delivery);
+      Agent.Blackboard.Money.Add(this.Agent.Blackboard.Salary);
     }
 
     protected override void OnInteractActionReset()

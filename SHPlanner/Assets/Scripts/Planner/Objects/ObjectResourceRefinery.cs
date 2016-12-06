@@ -8,6 +8,7 @@
 /******************************************************************************/
 using UnityEngine;
 using Stratus;
+using System;
 
 namespace Prototype
 {
@@ -38,5 +39,10 @@ namespace Prototype
     {
 
     }
+
+    protected override void OnInteraction(Agent user)
+    {      
+    }
+
   }
 }

@@ -14,6 +14,7 @@ namespace Prototype
 {
   public class ObjectTool : InteractiveObject
   {
+
     protected override void OnInteractiveObjectDestroyed()
     {      
     }
@@ -24,6 +25,10 @@ namespace Prototype
 
     protected override void OnSubscribe()
     {      
+    }
+
+    protected override void OnInteraction(Agent user)
+    {
     }
 
   }

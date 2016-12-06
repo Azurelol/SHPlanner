@@ -14,7 +14,6 @@ namespace Prototype
 {
   public class ObjectResourceDepot : InteractiveObject
   {
-
     public int Resources = 0;
 
     protected override void OnSubscribe()
@@ -31,7 +30,7 @@ namespace Prototype
 
     void OnDropOffResourceEvent(ObjectResource.DropOffEvent e)
     {
-      //Trace.Script("Received resource!", this);
+      //Trace.Script("Received resource!", this);      
       Resources++;
     }
 
@@ -45,8 +44,10 @@ namespace Prototype
       
     }
 
+    protected override void OnInteraction(Agent user)
+    {      
 
-
+    }
 
   }
 }

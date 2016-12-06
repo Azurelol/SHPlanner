@@ -32,6 +32,8 @@ namespace Prototype
     [Range(0.0f, 2.5f)] public float AssessmentPeriod = 0.4f;
     [Tooltip("How fast this agent moves")]
     public float MovementSpeed = 5f;
+    [Tooltip("The blackboard this agent is using")]
+    public Blackboard Blackboard = new Blackboard();
     System.Action CurrentBehavior;
     Countdown AssesssmentTimer;
 

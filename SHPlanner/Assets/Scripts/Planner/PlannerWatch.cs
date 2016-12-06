@@ -9,24 +9,29 @@
 using UnityEngine;
 using Stratus;
 using UnityEngine.UI;
+using System.Text;
+using System.Collections.Generic;
 
 namespace Prototype 
 {
   public class PlannerWatch : StratusBehaviour 
   {
     [Tooltip("The planner currently being looked at")]
-    public Planner Planner;
-
+    [ReadOnly] public Planner Planner;
+    public Dropdown Dropdown;
     public Text Name;
     public Text Plan;
     public Text Goal;
     public Text Action;
+    public Text Blackboard;
     public ProgressBar.ProgressBarBehaviour ActionProgress;
+    GameObject[] Agents;
 
     void Start()
     {
-      this.Subscribe();
-      Watch();
+      this.ConfigureDropdown();
+      //this.Subscribe();
+      this.ChangePlanner(0);
     }
 
     void Subscribe()
@@ -34,15 +39,59 @@ namespace Prototype
       if (!this.Planner)
         return;
 
+    }
+
+    void ConfigureDropdown()
+    {
+      // Get a list of all Planners on the scene
+      Agents = GameObject.FindGameObjectsWithTag("Agent");
+      var names = new List<string>();
+      foreach (var agent in Agents)
+        names.Add(agent.name);
+
+      // Set the dropdown list
+      Dropdown.ClearOptions();
+      Dropdown.AddOptions(names);
+    }
+
+    public void ChangePlanner(int index)
+    {
+      // Disconnect from all previous events
+      this.Disconnect();
+      this.Planner = Agents[index].GetComponent<Planner>();
+      // Subscribe to its events
       this.Planner.gameObject.Connect<Planner.PlanFormulatedEvent>(this.OnPlanFormulatedEvent);
       this.Planner.gameObject.Connect<Planner.PlanExecutedEvent>(this.OnPlanExecutedEvent);
       this.Planner.gameObject.Connect<Planner.ActionSelectedEvent>(this.OnActionSelectedEvent);
+      // Update the text
+      if (this.Planner.CurrentPlan != null) this.Plan.text = Planner.CurrentPlan.Print();
+      this.Goal.text = Planner.CurrentGoal.Name;
+
+      Trace.Script("Now watching:" + Agents[index].name);
     }
     
     void Update()
     {
-      if (Planner.CurrentAction != null && ActionProgress != null)
-        ActionProgress.Value = Planner.CurrentAction.Progress * 100f;
+      if (!Planner)
+        return;
+
+      this.DisplayPlanner();
+
+      //if (Planner.CurrentAction != null && ActionProgress != null)
+      //  ActionProgress.Value = Planner.CurrentAction.Progress * 100f;
+    }
+
+    void DisplayPlanner()
+    {
+      this.DisplayBlackboard();
+    }
+      
+    void DisplayBlackboard()
+    {
+      var message = new StringBuilder();
+      message.AppendLine("Money = " + Planner.Blackboard.Money.Charges);
+      message.AppendLine("Tools = " + Planner.Blackboard.Tool.Charges);
+      Blackboard.text = message.ToString();
     }
 
     void OnActionSelectedEvent(Planner.ActionSelectedEvent e)
@@ -56,7 +105,7 @@ namespace Prototype
     /// </summary>
     /// <param name="e"></param>
     void OnPlanExecutedEvent(Planner.PlanExecutedEvent e)
-    {
+    {      
       this.Plan.text = "";
       this.Action.text = "";
     }
@@ -69,15 +118,7 @@ namespace Prototype
     {
       this.Plan.text = e.Plan.Print();
     }
-
-    /// <summary>
-    /// Configures this watcher for a given planner
-    /// </summary>
-    void Watch()
-    {
-      this.Name.text = Planner.gameObject.name;
-      this.Goal.text = Planner.CurrentGoal.Name;
-    }
+    
 
 
   }  
