@@ -9,7 +9,7 @@ public class Finder : MonoBehaviour
 	// Use this for initialization
 	void Start ()
     {
-      path = AStar.FindPath(transform.position, GameObject.Find("Sphere").transform.position).ToArray();
+     // path = AStar.FindPath(transform.position, GameObject.Find("Sphere").transform.position).ToArray();
 	    target = path[curPoint].Location;
 	}
 	

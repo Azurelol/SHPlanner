@@ -11,6 +11,7 @@ public class WayPoint
     public float Cost = 0;
     public WayPoint parent;
     public int ID;
+    public long Iteration = 0;
 
     public WayPoint(Vector3 location, int ID)
     {

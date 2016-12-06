@@ -8,17 +8,19 @@ public static class WaypointGraph
 {
     
     private static ArrayList _waypoints = new ArrayList();
+    public static ArrayList Lines = new ArrayList();
     public static bool Initialized = false;
     private const int _maxJumpHeight = 0;
     private const int _maxJumpLength = 0;
-    private const int _minWalkAngle = 45;
+    private const int _minWalkAngle = 60;
     private const float _marchingBoxHeight = 1.2f;
     private const float _minimumWalkHeight = 0.7f;
     public static WayPoint endNode;
     public static WayPoint startNode;
     public static Material EdgeMat;
-    private const bool showVerts = true;
+    public static bool showVerts = true;
     private const float edgeWidth = 0.05f;
+    public const float colorscale = 1.2f;
     private enum MarchResult
     {
         Valid,
@@ -84,12 +86,13 @@ public static class WaypointGraph
     /// <param name="headColor"></param>
     /// <param name="arrowHeadLength"></param>
     /// <param name="arrowHeadAngle"></param>
-    public static void DrawArrow(Vector3 pos, Vector3 direction, Color color, Color headColor, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f)
+    public static GameObject[] DrawArrow(Vector3 pos, Vector3 direction, Color color, Color headColor, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f)
     {
        // Debug.DrawRay(pos, direction, color);
+       GameObject [] objArray = new GameObject[3];
         GameObject obj1 = new GameObject();
         LineRenderer ren = obj1.AddComponent<LineRenderer>();
-
+        objArray[0] = obj1;
         ren.SetVertexCount(2);
         ren.SetPosition(0, pos);
         ren.SetPosition(1, pos + direction);
@@ -100,7 +103,9 @@ public static class WaypointGraph
         Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
         Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
 
+        Lines.Add(ren);
         GameObject obj2 = new GameObject();
+        objArray[2] = obj2;
         ren = obj2.AddComponent<LineRenderer>();
 
         ren.SetVertexCount(2);
@@ -110,9 +115,12 @@ public static class WaypointGraph
         ren.material.color = headColor;
         ren.SetColors(headColor, headColor);
         ren.SetWidth(edgeWidth, edgeWidth);
+        Lines.Add(ren);
         // Debug.DrawRay(pos + direction, right * arrowHeadLength, headColor); GameObject obj = new GameObject();
         GameObject obj3 = new GameObject();
+        objArray[1] = obj3;
         ren = obj3.AddComponent<LineRenderer>();
+        Lines.Add(ren);
 
         ren.SetVertexCount(2);
         ren.SetPosition(0, pos + direction);
@@ -122,6 +130,7 @@ public static class WaypointGraph
         ren.SetColors(headColor, headColor);
         ren.SetWidth(edgeWidth, edgeWidth);
         //Debug.DrawRay(pos + direction, left * arrowHeadLength, headColor);
+        return objArray;
     }
     public static void DebugDraw()
     {
@@ -138,17 +147,17 @@ public static class WaypointGraph
                 ren.SetColors(Color.blue, Color.blue);
                 ren.SetWidth(edgeWidth, edgeWidth);
                 ren.material = EdgeMat;
-
+                //Lines.Add(ren);
             }
             foreach (KeyValuePair<WayPoint, bool> neighbor in ((WayPoint)point).Neighbors)
             {
                 if (!neighbor.Value)
                 {
-                    DrawArrow(((WayPoint)point).Location, neighbor.Key.Location - ((WayPoint)point).Location, Color.green, new Color(0.1f,1,0.1f,1), 0.5f);
+                    DrawArrow(((WayPoint)point).Location, neighbor.Key.Location - ((WayPoint)point).Location, Color.green / colorscale, new Color(0.1f,1,0.1f,1), 0.5f);
                 }
                 else
                 {
-                    DrawArrow(((WayPoint)point).Location, neighbor.Key.Location - ((WayPoint)point).Location, Color.cyan, new Color(0.1f, 1, 1, 1), 0.5f);
+                    DrawArrow(((WayPoint)point).Location, neighbor.Key.Location - ((WayPoint)point).Location, Color.cyan / colorscale, new Color(0.1f, 1, 1, 1), 0.5f);
                 }
             }
         }
@@ -225,7 +234,7 @@ public static class WaypointGraph
                 continue;
             }
             
-            if (hit.point.y > lastHeight + _minimumWalkHeight || Vector3.Angle(Vector3.up, hit.normal) > 30)
+            if (hit.point.y > lastHeight + _minimumWalkHeight || Vector3.Angle(Vector3.up, hit.normal) > _minWalkAngle)
             {
                 if (toVec.sqrMagnitude > _maxJumpLength || toVec.y > _maxJumpHeight)
                 {

@@ -14,7 +14,7 @@ public static class AStar
     private const float _marchingBoxHeight = 1.2f;
     private const float _minimumWalkHeight = 0.7f;
     private const float SQRTWO = 1.4142135623730950488016887242097f;
-
+    public static long Iteration = 0;
     private enum MarchResult
     {
         Valid,
@@ -26,13 +26,20 @@ public static class AStar
         
     }
 
-    public static List<WayPoint> FindPath(Vector3 start, Vector3 end)
+    public static List<KeyValuePair<WayPoint, GameObject[]>> FindPath(Vector3 start, Vector3 end)
     {
         var startNode = WaypointGraph.GetWaypointAroundVec(start);
         var endNode = WaypointGraph.GetWaypointAroundVec(end);
         //Push Start Node onto the Open List
         PointList openList = new PointList();
-        
+        if (startNode.Iteration != Iteration)
+        {
+            ResetNode(startNode);
+        }
+        if (endNode.Iteration != Iteration)
+        {
+            ResetNode(endNode);
+        }
         openList.Add(startNode);
 
         //While (Open List is not empty) {
@@ -43,12 +50,17 @@ public static class AStar
             //If node is the Goal Node, then path found (RETURN “found”)
             if ((node.Location- endNode.Location).sqrMagnitude < 0.5)
             {
+                ++Iteration;
                 return ConstructPath(node, startNode, end);
             }
             
             //For (all neighboring child nodes) {
             foreach (KeyValuePair<WayPoint, bool> neighbor in node.Neighbors)
             {
+                if (neighbor.Key.Iteration != Iteration)
+                {
+                    ResetNode(neighbor.Key);
+                }
                 //Compute its cost, f(x) = g(x) + h(x)
                 var point = neighbor.Key.Location;
                 var endPoint = endNode.Location;
@@ -81,21 +93,25 @@ public static class AStar
             node.OnClosedList = true;
         }
         //Open List empty, thus no path possible (RETURN “fail”)
-        return new List<WayPoint>();
+        ++Iteration;
+        return new List<KeyValuePair<WayPoint, GameObject[]>>();
     }
 
-    private static List<WayPoint> ConstructPath(WayPoint endNode, WayPoint startNode, Vector3 actualEnd)
+    private static List<KeyValuePair<WayPoint,GameObject[]>> ConstructPath(WayPoint endNode, WayPoint startNode, Vector3 actualEnd)
     {
         WayPoint curNode = endNode;
-        List<WayPoint> ret = new List<WayPoint>();
-        ret.Add(new WayPoint(actualEnd, 0));
+        List<KeyValuePair<WayPoint, GameObject[]>> ret = new List<KeyValuePair<WayPoint, GameObject[]>>();
+
+        WayPoint prev = new WayPoint(actualEnd, 0);
+        ret.Add(new KeyValuePair<WayPoint, GameObject[]>(prev, WaypointGraph.DrawArrow(actualEnd + Vector3.up, endNode.Location - actualEnd, Color.magenta, Color.magenta)));
         while (curNode != startNode)
         {
-            ret.Add(curNode);
+            ret.Add((new KeyValuePair<WayPoint, GameObject[]>(curNode, WaypointGraph.DrawArrow(curNode.Location + Vector3.up, prev.Location - curNode.Location, Color.magenta, Color.magenta))));
+            prev = curNode;
             curNode = curNode.parent;
         }
 
-        ret.Add(startNode);
+        ret.Add((new KeyValuePair<WayPoint, GameObject[]>(startNode,WaypointGraph.DrawArrow(curNode.Location + Vector3.up, prev.Location - curNode.Location, Color.magenta, Color.magenta))));
 
         ret.Reverse();
 
@@ -117,5 +133,15 @@ public static class AStar
     {
         return (p1 - p2).magnitude;
 
+    }
+
+    private static void ResetNode(WayPoint p)
+    {
+        p.GivenCost = 0;
+        p.Cost = 0;
+        p.parent = null;
+        p.Iteration = Iteration;
+        p.OnClosedList = false;
+        
     }
 }
