@@ -18,6 +18,7 @@ namespace Prototype
     public class PickUpEvent : ObjectResourceEvent { }
     public class DropOffEvent : ObjectResourceEvent { }
     public class HarvestEvent : ObjectResourceEvent { }    
+    public class DestroyedEvent : ObjectResourceEvent { }
     public int Count = 1;
     int InitialCount;
 
@@ -28,6 +29,10 @@ namespace Prototype
 
     protected override void OnInteractiveObjectDestroyed()
     {
+      // Inform the space that this object has been destroyed
+      var e = new DestroyedEvent();
+      e.Resource = this;
+      this.Space().Dispatch<DestroyedEvent>(e);
     }
 
     protected override void OnSubscribe()
@@ -46,7 +51,7 @@ namespace Prototype
       var scaling = (float)Count / (float)InitialCount;
       this.transform.localScale = this.transform.localScale * scaling;
 
-      if (this.Count <= 0) Destroy(this.gameObject);
+      //if (this.Count <= 0) Destroy(this.gameObject);
     }
 
 

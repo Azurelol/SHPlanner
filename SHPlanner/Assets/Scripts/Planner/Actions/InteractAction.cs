@@ -23,6 +23,24 @@ namespace Prototype
     protected abstract void OnInteract();
     protected abstract void OnInteractActionReset();
 
+    protected override void OnStart()
+    {
+      this.Space().Connect<ObjectResource.DestroyedEvent>(this.OnObjectResourceDestroyedEvent);
+    }
+
+    void OnObjectResourceDestroyedEvent(ObjectResource.DestroyedEvent e)
+    {
+      if (!this.Target)
+        return;
+
+      // If the object being destroyed is our current target, set it to null
+      if (e.Resource.gameObject == this.Target.gameObject)
+      {
+        Trace.Script("Target '" + this.Target.gameObject.name + "' has been lost", this);
+        this.Target = null;
+      }
+    }
+
     /// <summary>
     /// Signals to the interactive object that this agent will be interacting with it
     /// </summary>
@@ -42,7 +60,7 @@ namespace Prototype
     protected override void OnEnd()
     {
       if (this.Target)
-        this.Target.gameObject.Dispatch<InteractiveObject.InteractionEndedEvent>(new InteractiveObject.InteractionEndedEvent());
+        this.Target.gameObject.Dispatch<InteractiveObject.InteractionEndedEvent>(new InteractiveObject.InteractionEndedEvent());      
     }
 
     /// <summary>
@@ -56,6 +74,10 @@ namespace Prototype
       return false;
     }
 
+    /// <summary>
+    /// This context precondition is fulfilled if a valid target was found
+    /// </summary>
+    /// <returns></returns>
     protected override bool OnCheckContextPrecondition()
     {
       // Look for the target of this action
@@ -68,25 +90,6 @@ namespace Prototype
     /// </summary>
     protected override void OnExecute()
     {
-
-      // If the target has been destroyed, cancel this action
-      // If something happened to the target, replan
-      if (!this.Target)
-      {
-        this.gameObject.Dispatch<CanceledEvent>(new CanceledEvent());
-        return;
-      }
-
-      // If the target is being currently used, look for another or wait
-      //if (this.Target.CanBeUsed(this.Agent))
-      //  return;
-
-
-
-
-
-      //this.Target.gameObject.Dispatch<InteractiveObject.InteractEvent>(new InteractiveObject.InteractEvent());
-
       // We are interacting with it
       var interaction = new InteractiveObject.InteractionStartedEvent();
       interaction.Source = this.Agent;
@@ -122,10 +125,6 @@ namespace Prototype
           //  continue;
 
           targets.Add(dist, interactive);
-
-          //this.Target = interactive;
-          //Trace.Script(Description + " : Found a valid target = " + interactive.name, this);
-          //return;
         }
       }
 
@@ -141,8 +140,6 @@ namespace Prototype
         }
       }
       this.Target = nearestTarget;
-
-      //Trace.Script(Description + " : No valid target found!", this);
     }
   }
 }

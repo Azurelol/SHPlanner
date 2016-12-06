@@ -198,7 +198,7 @@ namespace Prototype
         var builder = new StringBuilder();
         foreach (var action in Actions)
         {
-          builder.AppendLine("- " + action.Description);
+          builder.AppendLine("- " + action.Description + " (" + action.Cost + ")");
         }
         return builder.ToString();
       }

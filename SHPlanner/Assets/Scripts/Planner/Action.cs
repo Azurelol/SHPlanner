@@ -24,6 +24,8 @@ namespace Prototype
     public class EndedEvent : ActionEvent { }
     public class CanceledEvent : ActionEvent { }
 
+    public enum ActionStatus { Moving, Executing, Inactive }
+
     //------------------------------------------------------------------------/
     // Properties
     //------------------------------------------------------------------------/
@@ -39,6 +41,8 @@ namespace Prototype
     [Tooltip("The range at which this action needs to be within the target")]
     public float Range = 2f;
 
+    [ReadOnly] public ActionStatus CurrentStatus = ActionStatus.Inactive;
+
     public float Progress { get { return ProgressTimer.Progress; } }
     public abstract string Description { get; }
     protected abstract bool RequiresRange { get; }
@@ -53,6 +57,7 @@ namespace Prototype
     //------------------------------------------------------------------------/
     // Inheritance
     //------------------------------------------------------------------------/
+    protected virtual void OnStart() {}
     protected abstract void OnSetup();
     protected abstract void OnBegin();
     protected abstract void OnEnd();
@@ -68,6 +73,7 @@ namespace Prototype
     {
       this.Agent = GetComponent<Agent>();
       this.Planner = GetComponent<Planner>();
+      this.OnStart();
       this.OnSetup();
     }
 
@@ -87,6 +93,12 @@ namespace Prototype
       else
         this.Execute();
     }
+
+    void OnObjectResourceDestroyedEvent()
+    {
+
+    }
+
 
     /// <summary>
     /// Checks whether this action has any context preconditionsto be fulfilled
@@ -120,6 +132,8 @@ namespace Prototype
     public void Reset()
     {
       this.Active = false;
+      this.CurrentStatus = ActionStatus.Inactive;
+      this.Target = null;
       this.ProgressTimer.Reset(this.Speed);
       this.OnReset();
     }
@@ -141,6 +155,14 @@ namespace Prototype
       // If not within range of the target, approach it
       if (this.RequiresRange && !IsWithinRange())
       {
+        // If the target has been destroyed, cancel this action
+        // If something happened to the target, replan
+        if (!this.Target)
+        {
+          this.gameObject.Dispatch<CanceledEvent>(new CanceledEvent());
+          return;
+        }
+
         //this.Approach();
         return;
       }
@@ -174,6 +196,9 @@ namespace Prototype
     /// </summary>
     void Approach()
     {
+      if (!this.Target)
+        return;
+
       var path = AStar.FindPath(transform.position, this.Target.transform.position).ToArray();
 
       if (Tracing)
@@ -186,6 +211,7 @@ namespace Prototype
         }
       }
 
+      this.CurrentStatus = ActionStatus.Moving;
       StartCoroutine(this.FollowPathRoutine(path));
     }
 
@@ -204,6 +230,10 @@ namespace Prototype
         {
           if (IsWithinRange())
             break;
+
+          // @TODO: Ugh...
+          if (transform.position == point.Key.Location)
+            break;
           // Keep the same y
           //point.Location.y = transform.position.y;
           //Trace.Script("MOVING!", this);
@@ -216,6 +246,9 @@ namespace Prototype
           obj.Destroy();
         }
       }
+
+      this.CurrentStatus = ActionStatus.Executing;
+
       if (Tracing) Trace.Script("Reached " + this.Target, this);
     }
 
@@ -238,6 +271,10 @@ namespace Prototype
     /// <returns></returns>
     bool IsWithinRange()
     {
+      // @TODO: This shouldn't be checked here
+      if (!this.Target)
+        return false;
+
       var targetDist = Vector3.Distance(this.Target.transform.position, this.transform.position);
       if (targetDist <= this.Range) return true;
       return false;

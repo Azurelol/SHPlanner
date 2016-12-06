@@ -23,8 +23,10 @@ namespace Prototype
 
     protected override bool OnValidateTarget(InteractiveObject obj)
     {
-      if (obj is ObjectResource)
-        return true;
+      var resource = obj as ObjectResource;
+      if (resource == null) return false;
+      // If there's resources left to be mined...
+      if (resource.Count > 0) return true;
       return false;
     }
 

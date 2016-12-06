@@ -24,6 +24,7 @@ namespace Prototype
     public Text Goal;
     public Text Action;
     public Text Blackboard;
+    public Light Indicator;
     public ProgressBar.ProgressBarBehaviour ActionProgress;
     GameObject[] Agents;
 
@@ -71,9 +72,14 @@ namespace Prototype
       this.Planner.gameObject.Connect<Planner.ActionSelectedEvent>(this.OnActionSelectedEvent);
       // Update the text
       if (this.Planner.CurrentPlan != null) this.Plan.text = Planner.CurrentPlan.Print();
+      if (this.Planner.CurrentAction != null) this.Action.text = Planner.CurrentAction.Description;
       this.Goal.text = Planner.CurrentGoal.Name;
+      // Parent the indicator to the agent
+      this.Indicator.transform.position = Vector3.zero;
+      this.Indicator.transform.SetParent(this.Planner.transform, true);
+      this.Indicator.transform.localPosition = new Vector3(0f, 10f, 0f);
 
-      Trace.Script("Now watching:" + Agents[index].name);
+      Trace.Script("Now watching " + Agents[index].name);
     }
     
     void Update()
@@ -90,6 +96,10 @@ namespace Prototype
     void DisplayPlanner()
     {
       this.DisplayBlackboard();
+      if (this.Planner.CurrentAction)
+      {
+        this.Action.text = this.Planner.CurrentAction.Description + " (" + this.Planner.CurrentAction.CurrentStatus.ToString() + ")";
+      }
     }
       
     void DisplayBlackboard()

@@ -45,7 +45,7 @@ namespace Prototype
 
     protected override void OnInteraction(Agent user)
     {
-      Trace.Script("Tool bought! ", this);
+      //Trace.Script("Tool bought! ", this);
       user.Blackboard.Money.Consume(this.ToolCost);
     }
   }

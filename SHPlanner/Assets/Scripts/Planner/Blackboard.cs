@@ -30,8 +30,8 @@ namespace Prototype
     }
     public void Consume(int amount = 1)
     {
-      if (CurrentCharges == 0)
-        throw new System.Exception("Attempted to consume when there's no charges left!");
+      //if (CurrentCharges == 0)
+      //  throw new System.Exception("Attempted to consume when there's no charges left!");
       CurrentCharges = CurrentCharges - amount;
       Print();      
     }

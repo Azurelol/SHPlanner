@@ -50,8 +50,9 @@ namespace Prototype
 
     void Scale()
     {
-      var scaling = ( ((float)(CurrentResources + 1)) * ScaleFactor)/ (float)ProcessedResourcesNeeded ; 
-      this.transform.localScale = this.transform.localScale * scaling;
+      //var scaling = ( ((float)(CurrentResources + 1)) * ScaleFactor)/ (float)ProcessedResourcesNeeded ; 
+      //this.transform.localScale = this.transform.localScale * scaling;
+      this.transform.localScale = transform.localScale * 1.1f;
     }
 
     protected override void OnInteraction(Agent user)
