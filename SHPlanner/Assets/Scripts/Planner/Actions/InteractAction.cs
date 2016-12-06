@@ -1,4 +1,4 @@
-/******************************************************************************/
+﻿/******************************************************************************/
 /*!
 @file   InteractAction.cs
 @author Christian Sagel
@@ -32,8 +32,8 @@ namespace Prototype
       if (!this.Target)
       {
         this.gameObject.Dispatch<CanceledEvent>(new CanceledEvent());
-      }           
-      
+      }
+
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ namespace Prototype
     {
       if (this.Target)
         this.Target.gameObject.Dispatch<InteractiveObject.InteractionEndedEvent>(new InteractiveObject.InteractionEndedEvent());
-    }    
+    }
 
     /// <summary>
     /// This action is validated as it hasn't interacted
@@ -61,7 +61,7 @@ namespace Prototype
       // Look for the target of this action
       this.FindTarget();
       return this.Target != null;
-    }    
+    }
 
     /// <summary>
     /// Sends an interact event to the object in question.
@@ -95,7 +95,7 @@ namespace Prototype
       this.OnInteract();
       this.HasInteracted = true;
     }
-    
+
     protected override void OnReset()
     {
       this.OnInteractActionReset();
@@ -110,7 +110,7 @@ namespace Prototype
       var targets = new Dictionary<float, InteractiveObject>();
 
       // Look at the interactible objects that the agent has detected
-      foreach (var interactive in this.Planner.InteractivesInRange)
+      foreach (var interactive in this.Planner.Sensor.Interactives)
       {
         if (this.OnValidateTarget(interactive))
         {
@@ -132,7 +132,7 @@ namespace Prototype
       // Pick the nearest target
       InteractiveObject nearestTarget = null;
       float nearestDist = Mathf.Infinity;
-      foreach(var target in targets)
+      foreach (var target in targets)
       {
         if (target.Key < nearestDist)
         {
@@ -144,12 +144,5 @@ namespace Prototype
 
       //Trace.Script(Description + " : No valid target found!", this);
     }
-
-
-
-
   }
-
-
-
 }
