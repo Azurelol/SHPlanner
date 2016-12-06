@@ -17,7 +17,7 @@ namespace Prototype
   public class PlannerWatch : StratusBehaviour 
   {
     [Tooltip("The planner currently being looked at")]
-    [ReadOnly] public Planner Planner;
+    [HideInInspector] public Planner Planner;
     public Dropdown Dropdown;
     public Text Name;
     public Text Plan;
@@ -27,24 +27,26 @@ namespace Prototype
     public ProgressBar.ProgressBarBehaviour ActionProgress;
     GameObject[] Agents;
 
+    /// <summary>
+    /// Configures the dropdown menu and sets the initial planner
+    /// </summary>
     void Start()
     {
       this.ConfigureDropdown();
       //this.Subscribe();
       this.ChangePlanner(0);
     }
-
-    void Subscribe()
-    {
-      if (!this.Planner)
-        return;
-
-    }
-
+    
+    /// <summary>
+    /// Configures the dropdown menu
+    /// </summary>
     void ConfigureDropdown()
     {
       // Get a list of all Planners on the scene
       Agents = GameObject.FindGameObjectsWithTag("Agent");
+      if (Agents.Length == 0)
+        throw new System.Exception("No agents in scene or they were not properly set. Make sure they have the tag 'Agent' on them!");
+
       var names = new List<string>();
       foreach (var agent in Agents)
         names.Add(agent.name);
@@ -54,6 +56,10 @@ namespace Prototype
       Dropdown.AddOptions(names);
     }
 
+    /// <summary>
+    /// Changes the current Planner that is being watched
+    /// </summary>
+    /// <param name="index">The index of the planner being watched</param>
     public void ChangePlanner(int index)
     {
       // Disconnect from all previous events

@@ -28,7 +28,8 @@ namespace Prototype
     // Properties
     //------------------------------------------------------------------------/
     [Tooltip("The current target of this action")]
-    [ReadOnly] public MonoBehaviour Target;
+    [ReadOnly]
+    public MonoBehaviour Target;
     [Tooltip("Whether this action can be interrupted")]
     public bool IsInterruptible = false;
     [Tooltip("The cost of this action. Used by the planner's A*")]
@@ -47,7 +48,7 @@ namespace Prototype
     public WorldState Effects = new WorldState();
     protected Countdown ProgressTimer = new Countdown();
     bool Active = false;
-    bool Tracing = true;
+    bool Tracing = false;
 
     //------------------------------------------------------------------------/
     // Inheritance
@@ -80,8 +81,8 @@ namespace Prototype
         return;
 
       // If the action has finished, end it
-      if (this.Validate())      
-        this.End();      
+      if (this.Validate())
+        this.End();
       // Otherwise keep executing it.
       else
         this.Execute();
@@ -149,9 +150,9 @@ namespace Prototype
       {
         //Trace.Script(Description + " : Executing!", this);
         this.OnExecute();
-      }      
+      }
       //Trace.Script(Description + " : Casting action...", this);
-    }    
+    }
 
     /// <summary>
     /// Ends this action, applying its effect.
@@ -182,12 +183,12 @@ namespace Prototype
         foreach (var point in path)
         {
           Trace.Script("- " + point.Key.Location, this);
-        } 
+        }
       }
 
       StartCoroutine(this.FollowPathRoutine(path));
     }
-        
+
     /// <summary>
     /// Follows a path of waypoints to the currnet target
     /// </summary>
@@ -210,10 +211,10 @@ namespace Prototype
           yield return new WaitForFixedUpdate();
         }
 
-          foreach (var obj in point.Value)
-          {
-             obj.Destroy(); 
-          }
+        foreach (var obj in point.Value)
+        {
+          obj.Destroy();
+        }
       }
       if (Tracing) Trace.Script("Reached " + this.Target, this);
     }
@@ -245,6 +246,6 @@ namespace Prototype
 
 
 
-  } 
+  }
 
 }
