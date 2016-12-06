@@ -187,7 +187,7 @@ namespace Prototype
       this.CurrentPlan = Plan.Formulate(this, this.AvailableActions, this.CurrentState, this.CurrentGoal);
       if (this.CurrentPlan != null)
       {
-        //Trace.Script("Executing plan!", this);
+        Trace.Script("Executing new plan!", this);
         this.gameObject.Dispatch<PlanFormulatedEvent>(new PlanFormulatedEvent(this.CurrentPlan));
         this.ExecutePlan();
       }

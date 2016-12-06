@@ -14,6 +14,13 @@ namespace Prototype
 {
   public abstract class EquipmentAction : Action
   {
+    protected override bool RequiresRange
+    {
+      get
+      {
+        return false;
+      }
+    }
     bool IsEquipped = false;
     protected abstract void OnEquip();
     protected abstract void OnEquipmentBegin();
