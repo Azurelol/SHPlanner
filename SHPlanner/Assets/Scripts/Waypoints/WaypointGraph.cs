@@ -9,13 +9,16 @@ public static class WaypointGraph
     
     private static ArrayList _waypoints = new ArrayList();
     public static bool Initialized = false;
-    private const int _maxJumpHeight = 2;
-    private const int _maxJumpLength = 100;
+    private const int _maxJumpHeight = 0;
+    private const int _maxJumpLength = 0;
     private const int _minWalkAngle = 45;
     private const float _marchingBoxHeight = 1.2f;
     private const float _minimumWalkHeight = 0.7f;
     public static WayPoint endNode;
     public static WayPoint startNode;
+    public static Material EdgeMat;
+    private const bool showVerts = true;
+    private const float edgeWidth = 0.05f;
     private enum MarchResult
     {
         Valid,
@@ -90,9 +93,10 @@ public static class WaypointGraph
         ren.SetVertexCount(2);
         ren.SetPosition(0, pos);
         ren.SetPosition(1, pos + direction);
+        ren.material = EdgeMat;
         ren.material.color = color;
         ren.SetColors(color, color);
-        ren.SetWidth(0.1f, 0.1f);
+        ren.SetWidth(edgeWidth, edgeWidth);
         Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
         Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
 
@@ -102,9 +106,10 @@ public static class WaypointGraph
         ren.SetVertexCount(2);
         ren.SetPosition(0, pos + direction);
         ren.SetPosition(1, pos + direction + right * arrowHeadLength);
+        ren.material = EdgeMat;
         ren.material.color = headColor;
         ren.SetColors(headColor, headColor);
-        ren.SetWidth(0.1f, 0.1f);
+        ren.SetWidth(edgeWidth, edgeWidth);
         // Debug.DrawRay(pos + direction, right * arrowHeadLength, headColor); GameObject obj = new GameObject();
         GameObject obj3 = new GameObject();
         ren = obj3.AddComponent<LineRenderer>();
@@ -112,23 +117,29 @@ public static class WaypointGraph
         ren.SetVertexCount(2);
         ren.SetPosition(0, pos + direction);
         ren.SetPosition(1, pos + direction + left * arrowHeadLength);
+        ren.material = EdgeMat;
         ren.material.color = headColor;
         ren.SetColors(headColor, headColor);
-        ren.SetWidth(0.1f, 0.1f);
+        ren.SetWidth(edgeWidth, edgeWidth);
         //Debug.DrawRay(pos + direction, left * arrowHeadLength, headColor);
     }
     public static void DebugDraw()
     {
         foreach (var point in _waypoints)
         {
-            GameObject obj = new GameObject();
-            LineRenderer ren = obj.AddComponent<LineRenderer>();
+            if (showVerts)
+            {
+                GameObject obj = new GameObject();
+                LineRenderer ren = obj.AddComponent<LineRenderer>();
 
-            ren.SetVertexCount(2);
-            ren.SetPosition(0, ((WayPoint) point).Location);
-            ren.SetPosition(1, ((WayPoint)point).Location + Vector3.up);
-            ren.SetColors(Color.blue, Color.blue);
-            ren.SetWidth(0.1f,0.1f);
+                ren.SetVertexCount(2);
+                ren.SetPosition(0, ((WayPoint)point).Location);
+                ren.SetPosition(1, ((WayPoint)point).Location + Vector3.up / 3);
+                ren.SetColors(Color.blue, Color.blue);
+                ren.SetWidth(edgeWidth, edgeWidth);
+                ren.material = EdgeMat;
+
+            }
             foreach (KeyValuePair<WayPoint, bool> neighbor in ((WayPoint)point).Neighbors)
             {
                 if (!neighbor.Value)

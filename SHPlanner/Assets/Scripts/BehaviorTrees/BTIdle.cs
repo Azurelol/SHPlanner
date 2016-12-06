@@ -18,7 +18,6 @@ public class BTIdle : BTNode {
 
     public override NodeStatus Update(ref BTAgentData nodeData)
     {
-        nodeData.MyTree.MyGameObject.GetComponent<KinematicController>().Move(Vector3.zero);
         return NodeStatus.Running;
     }
 }

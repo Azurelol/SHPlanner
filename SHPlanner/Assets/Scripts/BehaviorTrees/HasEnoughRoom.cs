@@ -41,10 +41,10 @@ public class HasEnoughRoom : BTDecoratorNode
     public override NodeStatus Update(ref BTAgentData nodeData)
     {
         var data = GetChild(ref nodeData);
-        var result = WorldState.QueryAttackPosition(((RoomData) nodeData.MyData));
 
         //if the distance is too far
-        if (result > 0)
+        //if (result > 0)
+        if(true)
         {
             NodeStatus stat = (BehaviorTreeSystem.nodes[data.MyType]).Tick(ref data);
             data.CurStatus = stat;

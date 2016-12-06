@@ -32,7 +32,6 @@ public class TestNode : BTNode
     // Update is called once per frame
     public override NodeStatus Update(ref BTAgentData nodeData)
     {
-        nodeData.MyTree.MyGameObject.GetComponent<KinematicController>().Move(Vector3.back);
         ((TestNodeData)nodeData.MyData).timer += Time.deltaTime;
         if (((TestNodeData) nodeData.MyData).timer >= 0.5f)
         {
