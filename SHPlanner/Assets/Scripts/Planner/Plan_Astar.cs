@@ -1,4 +1,4 @@
-﻿/******************************************************************************/
+/******************************************************************************/
 /*!
 @file   Plan_Astar.cs
 @author Christian Sagel
@@ -26,7 +26,7 @@ namespace Prototype
         /// </summary>
         public class Node
         {
-          public enum ListStatus { OpenList, ClosedList }
+          public enum ListStatus { Open, Closed, Unexplored }
 
           /// <summary>
           /// The parent of this node, whose preconditions this node fulfills
@@ -35,7 +35,7 @@ namespace Prototype
           /// <summary>
           /// Whether this node is on the open or closed list
           /// </summary>
-          public ListStatus Status;
+          public ListStatus Status = ListStatus.Unexplored;
           /// <summary>
           /// f(x) = g(x) + h(x): The current cost of the node
           /// </summary>
@@ -48,6 +48,17 @@ namespace Prototype
           /// Everytime we do a search, we increment this. Behaves like a dirty bit.
           /// </summary>
           public int Iteration = 0;
+          /// <summary>
+          /// A description of this node
+          /// </summary>
+          public string Description
+          {
+            get
+            {
+              if (Action) return Action.Description;
+              return null;
+            }
+          }
 
           public WorldState State;
           public Action Action;
@@ -71,6 +82,7 @@ namespace Prototype
         WorldState StartState;
         WorldState EndState;
         Action[] Actions;
+        int CurrentIteration = 0;
 
         /// <summary>
         /// Constructor
@@ -96,7 +108,7 @@ namespace Prototype
           
           this.MakeMap();
           // 1. Put the starting node on the open list
-          PutOnList(OpenList, this.StartingNode, Node.ListStatus.OpenList);
+          PutOnList(this.StartingNode, Node.ListStatus.Open);
         }
         
         void MakeMap()
@@ -119,20 +131,57 @@ namespace Prototype
         /// <returns></returns>
         public List<Action> FindSolution()
         {
-
-
           while (!OpenList.Empty())
           {
+            // Pop the cheapest node off the open list
+            var parent = FindCheapest();
+            Trace.Script("Iteration #" + CurrentIteration + " | Parent = " + parent.Description);
+            
+            // if the a route to the starting node was found...
+            if (IsFinished(parent))
+            {
+              Trace.Script("Valid path found!");
+              return BuildPath(parent);
+            }
+            // For all neighboring child nodes...
+            var neighbors = FindNeighbors(parent);
+            foreach(var child in neighbors)
+            {
+              // If the node is unexplored
+              if (child.Status == Node.ListStatus.Unexplored)
+              {
+                child.Cost = child.GivenCost + CalculateHeuristicCost(child, this.DestinationNode);
+                child.Parent = parent;
+                PutOnList(child, Node.ListStatus.Open);
+              }
+              // Else if the node is on the open or closed list
+              else
+              {                
+                // If the new cost is lesser
+                var cost = child.GivenCost + CalculateHeuristicCost(child, this.DestinationNode);
+                if (cost < child.Cost)
+                {
+                  child.Parent = parent;
+                  child.Cost = cost;
+                }
+              }
+            }
 
+            // Place the parent node on the closed list
+            PutOnList(parent, Node.ListStatus.Closed);
+            CurrentIteration++;
+            if (CurrentIteration > 10)
+              break;
           }
 
-          var path = new List<Action>();
-          return path;
+          // If the open list is empty, no path was found
+          Trace.Script("No valid path found!");
+          return new List<Action>();
         }
 
         static float CalculateHeuristicCost(Node node, Node target)
         {
-          return 1f;
+          return 0f;
         }
 
         /// <summary>
@@ -141,23 +190,107 @@ namespace Prototype
         /// <param name="openList"></param>
         /// <param name="node"></param>
         /// <param name="list"></param>
-        void PutOnList(List<Node> openList, Node node, Node.ListStatus list)
+        void PutOnList(Node node, Node.ListStatus list)
         {
-          if (list == Node.ListStatus.OpenList)
+          if (list == Node.ListStatus.Open)
           {
-            openList.Add(node);
-            node.Status = Node.ListStatus.OpenList;
+            Trace.Script(node.Description + " has been added to the open list!");
+            OpenList.Add(node);
+            node.Status = Node.ListStatus.Open;
           }
           else
           {
-            node.Status = Node.ListStatus.ClosedList;
+            Trace.Script(node.Description + " has been removed from the open list!");
+            OpenList.Remove(node);
+            node.Status = Node.ListStatus.Closed;
           }
         }
 
+        /// <summary>
+        /// Finds the cheapest node in the open list
+        /// </summary>
+        /// <returns></returns>
+        Node FindCheapest()
+        {
+          int cheapestIndex = 0;
+          for (int i = 0; i < OpenList.Count; ++i)
+          {
+            var node = OpenList[i];
+            if (node.Cost < OpenList[cheapestIndex].Cost)
+              cheapestIndex = i;
+          }
+          var cheapestNode = OpenList[cheapestIndex];
+          Trace.Script("Cheapest node = " + cheapestNode.Action);
+          return cheapestNode;
+        }
+
+        /// <summary>
+        /// Finds the neighbors of this node
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        Node[] FindNeighbors(Node node)
+        {
+          var neighbors = new List<Node>();
+          Trace.Script("Looking for neighboring nodes (actions) for the node: " + node.Description + " with preconditions: " + node.State.Print());
+
+          // Check for actions that satisfy the preconditions of this node
+          foreach(var action in ActionEffectsTable)
+          {
+            var state = action.Key;            
+            // If the action satisfies the preconditions, add it as a possible
+            // neighbor
+            if (state.Satisfies(node.State)) {
+              Trace.Script(action.Value + " satifies the condition = " + node.State.Print());
+              var preconditions = action.Value.Preconditions;
+              neighbors.Add(new Node(node, action.Value.Cost, preconditions, action.Value));
+            }
+          }
+
+          if (neighbors.Count == 0)
+            Trace.Script("No nodes satisfy the condition!");
+
+          return neighbors.ToArray();
+        }
+
+        /// <summary>
+        /// Checks whether we are finished
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns>If there's no preconditions for this action, we are finisnhed</returns>
+        bool IsFinished(Node node)
+        {
+          // If there's no preconditions left or if the current world state already satisfies the precondition...
+          //bool alreadySatisfied = DestinationNode.State.Satisfies(node.State);
+          if (node.State.IsEmpty || DestinationNode.State.Satisfies(node.State))
+          {
+            Trace.Script("No preconditions left to fulfill for node: " + node.Description);
+            return true;
+          }
+          return false;
+        }
+
+        /// <summary>
+        /// Builds the path given the current node
+        /// </summary>
+        /// <returns></returns>
+        List<Action> BuildPath(Node node)
+        {
+          var path = new List<Action>();
+
+          var currentNode = node;
+          while (currentNode != null)
+          {
+            if (currentNode.Action)
+              path.Add(currentNode.Action);
+
+            currentNode = currentNode.Parent;
+          }
+
+          return path;
+        }
+
       }
-
-
-
     }
   }
 }
