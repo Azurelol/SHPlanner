@@ -16,6 +16,7 @@ public class WayPointBuilder : MonoBehaviour
     {
       foreach (LineRenderer line in WaypointGraph.Lines)
       {
+        if(line != null)
         line.material.color = new Color(0, 0, 0, 0);
       }
     }
@@ -23,7 +24,8 @@ public class WayPointBuilder : MonoBehaviour
     {
       foreach (LineRenderer line in WaypointGraph.Lines)
       {
-        line.material.color = Color.green / WaypointGraph.colorscale;
+        if (line != null)
+          line.material.color = Color.green / WaypointGraph.colorscale;
       }
     }
   }
